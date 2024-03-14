@@ -4,14 +4,20 @@
   <meta charset="utf-8">
   
   
-  <title>Hexo</title>
+  <title>trim the reads with special apdater and barocde | Hexo</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-  <meta property="og:type" content="website">
-<meta property="og:title" content="Hexo">
-<meta property="og:url" content="http://example.com/index.html">
+  <meta name="description" content="read结构R1 5’→3’: genome_sequenceR2 5’→3’: special_adapter + barcode1 + linker1 + barcode2 + linker2 + barcode3 + genome_sequence Rawdata文件中的read1和read2序列通常去除了P5和P7接头。而在本次我处理的read文件中，read2的5’端加上了一段特定的额外">
+<meta property="og:type" content="article">
+<meta property="og:title" content="trim the reads with special apdater and barocde">
+<meta property="og:url" content="http://example.com/2024/03/03/test/index.html">
 <meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="read结构R1 5’→3’: genome_sequenceR2 5’→3’: special_adapter + barcode1 + linker1 + barcode2 + linker2 + barcode3 + genome_sequence Rawdata文件中的read1和read2序列通常去除了P5和P7接头。而在本次我处理的read文件中，read2的5’端加上了一段特定的额外">
 <meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2024-03-03T07:33:41.000Z">
+<meta property="article:modified_time" content="2024-03-14T06:36:32.680Z">
 <meta property="article:author" content="John Doe">
+<meta property="article:tag" content="single-cell">
+<meta property="article:tag" content="pretreatment">
 <meta name="twitter:card" content="summary">
   
     <link rel="alternate" href="/atom.xml" title="Hexo" type="application/atom+xml">
@@ -71,9 +77,7 @@
 </header>
 
       <div class="outer">
-        <section id="main">
-  
-    <article id="post-test" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+        <section id="main"><article id="post-test" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
   <div class="article-meta">
     <a href="/2024/03/03/test/" class="article-date">
   <time class="dt-published" datetime="2024-03-03T07:33:41.000Z" itemprop="datePublished">2024-03-03</time>
@@ -90,8 +94,8 @@
       <header class="article-header">
         
   
-    <h1 itemprop="name">
-      <a class="p-name article-title" href="/2024/03/03/test/">trim the reads with special apdater and barocde</a>
+    <h1 class="p-name article-title" itemprop="headline name">
+      trim the reads with special apdater and barocde
     </h1>
   
 
@@ -148,66 +152,19 @@
     </footer>
   </div>
   
-</article>
-
-
-
+    
+<nav id="article-nav">
   
-    <article id="post-hello-world" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
-  <div class="article-meta">
-    <a href="/2024/03/03/hello-world/" class="article-date">
-  <time class="dt-published" datetime="2024-03-03T07:22:21.828Z" itemprop="datePublished">2024-03-03</time>
-</a>
-    
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
   
-    <h1 itemprop="name">
-      <a class="p-name article-title" href="/2024/03/03/hello-world/">Flying_doggy&#39;s home page</a>
-    </h1>
+    <a href="/2024/03/03/hello-world/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">Flying_doggy&#39;s home page</div>
+    </a>
   
+</nav>
 
-      </header>
-    
-    <div class="e-content article-entry" itemprop="articleBody">
-      
-        <p>Welcome to the home page of <strong>flying-doggy</strong>.<br>I am going to write down the report of daily <strong>bioinformatics</strong> work and some thoughts about everything.<br>This website would push me to insist on recording and I hope those work will be helpful to those who found it.</p>
-<p>By the way, if you have any question about my reports ,please leave message on my Github account or you can contact me with email: <a href="mailto:&#103;&#x75;&#106;&#105;&#x61;&#x6e;&#x68;&#x75;&#105;&#x40;&#103;&#x65;&#x6e;&#x65;&#99;&#x74;&#x69;&#x73;&#x2e;&#x61;&#99;&#46;&#x63;&#x6e;">&#103;&#x75;&#106;&#105;&#x61;&#x6e;&#x68;&#x75;&#105;&#x40;&#103;&#x65;&#x6e;&#x65;&#99;&#x74;&#x69;&#x73;&#x2e;&#x61;&#99;&#46;&#x63;&#x6e;</a>  .</p>
-<h1 id="MAPPING-ANALYSIS"><a href="#MAPPING-ANALYSIS" class="headerlink" title="MAPPING ANALYSIS"></a>MAPPING ANALYSIS</h1><h2 id="pre-processing-reads"><a href="#pre-processing-reads" class="headerlink" title="pre - processing reads"></a>pre - processing reads</h2><p>the application of fastp, Trimmomatic, cutadapt and some self-made script to deal with special structure of designed reads.</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo new <span class="string">&quot;My New Post&quot;</span></span><br></pre></td></tr></table></figure>
-<p>More info: <a target="_blank" rel="noopener" href="https://hexo.io/docs/writing.html">Writing</a></p>
-<h2 id="mapping-to-genome"><a href="#mapping-to-genome" class="headerlink" title="mapping to genome"></a>mapping to genome</h2><p>when the reads are trimmed and filtered, they can be mapped to the genome or assemblied.<br>this part will show the applications of 1. transcriptome-mapping: STAR etc ; 2. genome-mapping: BWA-MEM2 etc ; 3. Methylation-mapping: BISMARK etc ; 4. single-cell-mapping: cellranger </p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo server</span><br></pre></td></tr></table></figure>
-
-<p>More info: <a target="_blank" rel="noopener" href="https://hexo.io/docs/server.html">Server</a></p>
-<h2 id="downstream-analysis"><a href="#downstream-analysis" class="headerlink" title="downstream analysis"></a>downstream analysis</h2><p>mapped result are expected to be analysed to discover something we want.<br>we can use tools like Deeptools, bedtools, samtools etc to analyse the result. and it’s also important to make some scripts to complete interesting anlysis.</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo generate</span><br></pre></td></tr></table></figure>
-
-<p>More info: <a target="_blank" rel="noopener" href="https://hexo.io/docs/generating.html">Generating</a></p>
-<h1 id="GENOME-ANALYSIS"><a href="#GENOME-ANALYSIS" class="headerlink" title="GENOME ANALYSIS"></a>GENOME ANALYSIS</h1><p>phylogeny, insertion, deletion ,structral variation etc.<br>##</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo deploy</span><br></pre></td></tr></table></figure>
-
-<p>More info: <a target="_blank" rel="noopener" href="https://hexo.io/docs/one-command-deployment.html">Deployment</a></p>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://example.com/2024/03/03/hello-world/" data-id="cltqz7rjp0001b4vmgmi0au8r" data-title="Flying_doggy&#39;s home page" class="article-share-link"><span class="fa fa-share">Share</span></a>
-      
-      
-      
-    </footer>
-  </div>
   
 </article>
-
-
-
-  
 
 
 </section>

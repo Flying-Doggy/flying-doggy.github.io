@@ -4,17 +4,17 @@
   <meta charset="utf-8">
   
   
-  <title>Hello World | Hexo</title>
+  <title>Flying_doggy&#39;s home page | Hexo</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-  <meta name="description" content="Welcome to Hexo! This is your very first post. Check documentation for more info. If you get any problems when using Hexo, you can find the answer in troubleshooting or you can ask me on GitHub. Quick">
+  <meta name="description" content="Welcome to the home page of flying-doggy.I am going to write down the report of daily bioinformatics work and some thoughts about everything.This website would push me to insist on recording and I hop">
 <meta property="og:type" content="article">
-<meta property="og:title" content="Hello World">
+<meta property="og:title" content="Flying_doggy&#39;s home page">
 <meta property="og:url" content="http://example.com/2024/03/03/hello-world/index.html">
 <meta property="og:site_name" content="Hexo">
-<meta property="og:description" content="Welcome to Hexo! This is your very first post. Check documentation for more info. If you get any problems when using Hexo, you can find the answer in troubleshooting or you can ask me on GitHub. Quick">
+<meta property="og:description" content="Welcome to the home page of flying-doggy.I am going to write down the report of daily bioinformatics work and some thoughts about everything.This website would push me to insist on recording and I hop">
 <meta property="og:locale" content="en_US">
 <meta property="article:published_time" content="2024-03-03T07:22:21.828Z">
-<meta property="article:modified_time" content="2024-01-29T02:53:08.915Z">
+<meta property="article:modified_time" content="2024-03-03T08:01:07.985Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary">
   
@@ -89,7 +89,7 @@
         
   
     <h1 class="p-name article-title" itemprop="headline name">
-      Hello World
+      Flying_doggy&#39;s home page
     </h1>
   
 
@@ -97,24 +97,28 @@
     
     <div class="e-content article-entry" itemprop="articleBody">
       
-        <p>Welcome to <a target="_blank" rel="noopener" href="https://hexo.io/">Hexo</a>! This is your very first post. Check <a target="_blank" rel="noopener" href="https://hexo.io/docs/">documentation</a> for more info. If you get any problems when using Hexo, you can find the answer in <a target="_blank" rel="noopener" href="https://hexo.io/docs/troubleshooting.html">troubleshooting</a> or you can ask me on <a target="_blank" rel="noopener" href="https://github.com/hexojs/hexo/issues">GitHub</a>.</p>
-<h2 id="Quick-Start"><a href="#Quick-Start" class="headerlink" title="Quick Start"></a>Quick Start</h2><h3 id="Create-a-new-post"><a href="#Create-a-new-post" class="headerlink" title="Create a new post"></a>Create a new post</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo new <span class="string">&quot;My New Post&quot;</span></span><br></pre></td></tr></table></figure>
-
+        <p>Welcome to the home page of <strong>flying-doggy</strong>.<br>I am going to write down the report of daily <strong>bioinformatics</strong> work and some thoughts about everything.<br>This website would push me to insist on recording and I hope those work will be helpful to those who found it.</p>
+<p>By the way, if you have any question about my reports ,please leave message on my Github account or you can contact me with email: <a href="mailto:&#103;&#x75;&#106;&#105;&#x61;&#x6e;&#x68;&#x75;&#105;&#x40;&#103;&#x65;&#x6e;&#x65;&#99;&#x74;&#x69;&#x73;&#x2e;&#x61;&#99;&#46;&#x63;&#x6e;">&#103;&#x75;&#106;&#105;&#x61;&#x6e;&#x68;&#x75;&#105;&#x40;&#103;&#x65;&#x6e;&#x65;&#99;&#x74;&#x69;&#x73;&#x2e;&#x61;&#99;&#46;&#x63;&#x6e;</a>  .</p>
+<h1 id="MAPPING-ANALYSIS"><a href="#MAPPING-ANALYSIS" class="headerlink" title="MAPPING ANALYSIS"></a>MAPPING ANALYSIS</h1><h2 id="pre-processing-reads"><a href="#pre-processing-reads" class="headerlink" title="pre - processing reads"></a>pre - processing reads</h2><p>the application of fastp, Trimmomatic, cutadapt and some self-made script to deal with special structure of designed reads.</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo new <span class="string">&quot;My New Post&quot;</span></span><br></pre></td></tr></table></figure>
 <p>More info: <a target="_blank" rel="noopener" href="https://hexo.io/docs/writing.html">Writing</a></p>
-<h3 id="Run-server"><a href="#Run-server" class="headerlink" title="Run server"></a>Run server</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo server</span><br></pre></td></tr></table></figure>
+<h2 id="mapping-to-genome"><a href="#mapping-to-genome" class="headerlink" title="mapping to genome"></a>mapping to genome</h2><p>when the reads are trimmed and filtered, they can be mapped to the genome or assemblied.<br>this part will show the applications of 1. transcriptome-mapping: STAR etc ; 2. genome-mapping: BWA-MEM2 etc ; 3. Methylation-mapping: BISMARK etc ; 4. single-cell-mapping: cellranger </p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo server</span><br></pre></td></tr></table></figure>
 
 <p>More info: <a target="_blank" rel="noopener" href="https://hexo.io/docs/server.html">Server</a></p>
-<h3 id="Generate-static-files"><a href="#Generate-static-files" class="headerlink" title="Generate static files"></a>Generate static files</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo generate</span><br></pre></td></tr></table></figure>
+<h2 id="downstream-analysis"><a href="#downstream-analysis" class="headerlink" title="downstream analysis"></a>downstream analysis</h2><p>mapped result are expected to be analysed to discover something we want.<br>we can use tools like Deeptools, bedtools, samtools etc to analyse the result. and it’s also important to make some scripts to complete interesting anlysis.</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo generate</span><br></pre></td></tr></table></figure>
 
 <p>More info: <a target="_blank" rel="noopener" href="https://hexo.io/docs/generating.html">Generating</a></p>
-<h3 id="Deploy-to-remote-sites"><a href="#Deploy-to-remote-sites" class="headerlink" title="Deploy to remote sites"></a>Deploy to remote sites</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo deploy</span><br></pre></td></tr></table></figure>
+<h1 id="GENOME-ANALYSIS"><a href="#GENOME-ANALYSIS" class="headerlink" title="GENOME ANALYSIS"></a>GENOME ANALYSIS</h1><p>phylogeny, insertion, deletion ,structral variation etc.<br>##</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo deploy</span><br></pre></td></tr></table></figure>
 
 <p>More info: <a target="_blank" rel="noopener" href="https://hexo.io/docs/one-command-deployment.html">Deployment</a></p>
 
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://example.com/2024/03/03/hello-world/" data-id="cltb6uuq80000xkvm1lhqfmje" data-title="Hello World" class="article-share-link"><span class="fa fa-share">Share</span></a>
+      <a data-url="http://example.com/2024/03/03/hello-world/" data-id="cltqz7rjp0001b4vmgmi0au8r" data-title="Flying_doggy&#39;s home page" class="article-share-link"><span class="fa fa-share">Share</span></a>
       
       
       
@@ -122,6 +126,20 @@
   </div>
   
     
+<nav id="article-nav">
+  
+    <a href="/2024/03/03/test/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          trim the reads with special apdater and barocde
+        
+      </div>
+    </a>
+  
+  
+</nav>
+
   
 </article>
 
@@ -131,12 +149,33 @@
           <aside id="sidebar">
   
     
+  <div class="widget-wrap">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/single-cell/">single-cell</a></li></ul>
+    </div>
+  </div>
+
 
   
     
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/pretreatment/" rel="tag">pretreatment</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/single-cell/" rel="tag">single-cell</a></li></ul>
+    </div>
+  </div>
+
 
   
     
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="/tags/pretreatment/" style="font-size: 10px;">pretreatment</a> <a href="/tags/single-cell/" style="font-size: 10px;">single-cell</a>
+    </div>
+  </div>
+
   
     
   <div class="widget-wrap">
@@ -155,7 +194,11 @@
       <ul>
         
           <li>
-            <a href="/2024/03/03/hello-world/">Hello World</a>
+            <a href="/2024/03/03/test/">trim the reads with special apdater and barocde</a>
+          </li>
+        
+          <li>
+            <a href="/2024/03/03/hello-world/">Flying_doggy&#39;s home page</a>
           </li>
         
       </ul>
