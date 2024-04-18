@@ -20,28 +20,35 @@
     var CONFIG = {"hostname":"example.com","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
   </script>
 
-  <meta property="og:type" content="website">
-<meta property="og:title" content="Hexo">
-<meta property="og:url" content="http://example.com/index.html">
+  <meta name="description" content="Introduction这份报告主要用以记录在用长片段测序结果组装基因组的方案，流程以及遇到的一些困难与分析结果。 长片段测序的HIFI数据，常用hifiasm这一软件进行初步组装，完成Contig水平的基因组。 再补充HIC数据后，可以juicer+3D-DNA, yahs等软件对Contig再次进行组装，成为scaffold水平的基因组。在对软件拼接结果的手动调整后，可能可以得到染色体水平的基">
+<meta property="og:type" content="article">
+<meta property="og:title" content="genome assembly">
+<meta property="og:url" content="http://example.com/2024/03/14/genome_assembly/index.html">
 <meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="Introduction这份报告主要用以记录在用长片段测序结果组装基因组的方案，流程以及遇到的一些困难与分析结果。 长片段测序的HIFI数据，常用hifiasm这一软件进行初步组装，完成Contig水平的基因组。 再补充HIC数据后，可以juicer+3D-DNA, yahs等软件对Contig再次进行组装，成为scaffold水平的基因组。在对软件拼接结果的手动调整后，可能可以得到染色体水平的基">
 <meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2024-03-14T06:27:59.000Z">
+<meta property="article:modified_time" content="2024-03-14T08:35:28.333Z">
 <meta property="article:author" content="John Doe">
+<meta property="article:tag" content="genome assembly">
+<meta property="article:tag" content="hifiasm">
+<meta property="article:tag" content="juicer">
 <meta name="twitter:card" content="summary">
 
-<link rel="canonical" href="http://example.com/">
+<link rel="canonical" href="http://example.com/2024/03/14/genome_assembly/">
 
 
 <script id="page-configurations">
   // https://hexo.io/docs/variables.html
   CONFIG.page = {
     sidebar: "",
-    isHome : true,
-    isPost : false,
+    isHome : false,
+    isPost : true,
     lang   : 'en'
   };
 </script>
 
-  <title>Hexo</title>
+  <title>genome assembly | Hexo</title>
   
 
 
@@ -144,9 +151,10 @@
         <div class="content-wrap">
           
 
-          <div class="content index posts-expand">
+          <div class="content post posts-expand">
             
-      
+
+    
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
@@ -162,10 +170,9 @@
       <meta itemprop="name" content="Hexo">
     </span>
       <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2024/03/14/genome_assembly/" class="post-title-link" itemprop="url">genome assembly</a>
-        </h2>
+        <h1 class="post-title" itemprop="name headline">
+          genome assembly
+        </h1>
 
         <div class="post-meta">
             <span class="post-meta-item">
@@ -198,7 +205,7 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <h1 id="Introduction"><a href="#Introduction" class="headerlink" title="Introduction"></a>Introduction</h1><p>这份报告主要用以记录在用长片段测序结果组装基因组的方案，流程以及遇到的一些困难与分析结果。</p>
+        <h1 id="Introduction"><a href="#Introduction" class="headerlink" title="Introduction"></a>Introduction</h1><p>这份报告主要用以记录在用长片段测序结果组装基因组的方案，流程以及遇到的一些困难与分析结果。</p>
 <p>长片段测序的HIFI数据，常用<a target="_blank" rel="noopener" href="https://github.com/chhylp123/hifiasm">hifiasm</a>这一软件进行初步组装，完成Contig水平的基因组。 再补充HIC数据后，可以juicer+3D-DNA, yahs等软件对Contig再次进行组装，成为scaffold水平的基因组。在对软件拼接结果的手动调整后，可能可以得到染色体水平的基因组文件。</p>
 <p>tips: contig和scaffold的概念主要是在使用 <strong>二代测序</strong> 获得短片段组装基因组的时候提出的，这两者在HIC挂载后的长度差异较大。<br>但是用了 <strong>三代测序</strong> 的长片段后，这两者的长度差异小了许多,这两个概念相对模糊了一点</p>
 <h1 id="1-Install-software"><a href="#1-Install-software" class="headerlink" title="1. Install software"></a>1. Install software</h1><p>在实际操作过程中，主要采用了hifiasm+juicer+3D-DNA的组装策略</p>
@@ -267,205 +274,35 @@
 
 <p>hisat2的比对结果展示了 &gt;90% 的转录组reads 能够比对上hifiasm的组装结果文件，可以交叉验证这两组数据来自于同一物种且具有较高的质量，这证明了： <strong>HIFI数据质量可靠，HIC数据可能存在较大的质量问题</strong></p>
 
-      
     </div>
 
     
     
     
+
       <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
+          <div class="post-tags">
+              <a href="/tags/genome-assembly/" rel="tag"># genome assembly</a>
+              <a href="/tags/hifiasm/" rel="tag"># hifiasm</a>
+              <a href="/tags/juicer/" rel="tag"># juicer</a>
+          </div>
 
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2024/03/03/test/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="John Doe">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Hexo">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2024/03/03/test/" class="post-title-link" itemprop="url">trim the reads with special apdater and barocde</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">Posted on</span>
-
-              <time title="Created: 2024-03-03 15:33:41" itemprop="dateCreated datePublished" datetime="2024-03-03T15:33:41+08:00">2024-03-03</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2024-03-14 14:36:32" itemprop="dateModified" datetime="2024-03-14T14:36:32+08:00">2024-03-14</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">In</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/single-cell/" itemprop="url" rel="index"><span itemprop="name">single-cell</span></a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h1 id="read结构"><a href="#read结构" class="headerlink" title="read结构"></a>read结构</h1><p>R1 5’→3’: genome_sequence<br>R2 5’→3’: special_adapter + barcode1 + linker1 + barcode2 + linker2 + barcode3 + genome_sequence</p>
-<p>Rawdata文件中的read1和read2序列通常去除了P5和P7接头。<br>而在本次我处理的read文件中，read2的5’端加上了一段特定的额外接头序列(seq1)，而在这一段接头序列之后又连接了单细胞特异的barcode结构： barcode1 + linker1 + barcode2 + linker2 + barcode3。</p>
-<h2 id="处理思路"><a href="#处理思路" class="headerlink" title="处理思路"></a>处理思路</h2><ol>
-<li>过滤read pair, 只提取read2 5’端具有 seq1 的 read pair。这一部分的工作可以由cutadapt完成。</li>
-<li>过滤 第1步中处理好的 reads 文件，筛选其中 5’端 具有特定barcode结构的read pair，并获取read ID 和 barcode 之间的对应关系。这一部分的工作应该可以用UMItools完成，但我这次打算先自己写脚本处理。</li>
-<li>过滤低质量，短长度的reads。这一部分的工作可以用fastp完成。</li>
-</ol>
-<h2 id="预期得到的文件"><a href="#预期得到的文件" class="headerlink" title="预期得到的文件"></a>预期得到的文件</h2><ol>
-<li>经过trim和高质量的 有效read的R1和R2文件</li>
-<li>Reads ID与 barcode 对应的文件</li>
-</ol>
-<h2 id="实际操作"><a href="#实际操作" class="headerlink" title="实际操作"></a>实际操作</h2><h3 id="cutadapt去除特定的接头序列"><a href="#cutadapt去除特定的接头序列" class="headerlink" title="cutadapt去除特定的接头序列"></a>cutadapt去除特定的接头序列</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">$ sample_ID=XXX</span><br><span class="line">$ adapter=XXXXXXXXXXX</span><br><span class="line"></span><br><span class="line">$ cutadapt -G <span class="variable">$&#123;adapter&#125;</span> -j 10 -e 0.1 -O 5 -m 50 \ </span><br><span class="line">--pair-filter=both  --discard-untrimmed -o <span class="variable">$&#123;sample_ID&#125;</span>_cutadapt_R1.fq.gz \ </span><br><span class="line">-p <span class="variable">$&#123;sample_ID&#125;</span>_cutadapt_R2.fq.gz <span class="variable">$&#123;sample_ID&#125;</span>_R1.fq.gz  <span class="variable">$&#123;sample_ID&#125;</span>_R2.fq.gz</span><br></pre></td></tr></table></figure>
-<p>cutadapt命令解释</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">-G #指定R2中5&#x27;端的接头序列， 相似的参数还有-g,-a,-A</span><br><span class="line">-j #运行该程序的核数</span><br><span class="line">-e #接头序列与reads序列匹配过程中允许的最大错配率(error rate)</span><br><span class="line">-O #接头序列与reads序列匹配过程中允许的最小重叠长度(overlap)</span><br><span class="line">-m #trim接头之后，如果reads的长度小于该值，则将该条reads丢弃(min-length)</span><br><span class="line">--pair-filter=both #如果read1或read2中的某条序列被丢弃了，那么它对应的read2或read1也同时被丢弃</span><br><span class="line">--discard-untrimmed #将没有被trim的reads丢弃，在本命令中的意思即：若reads2 5&#x27;端无配对得上$&#123;adapter&#125;得序列，则将该reads2丢弃，又因为 --pair-filter=both， 对应的read1也被丢弃</span><br><span class="line">-o, -p #输出裁剪后的对应的R1和R2文件</span><br><span class="line">最后两个就是输入文件</span><br></pre></td></tr></table></figure>
+        
 
 
-<p>cutdapt的使用可以参考<a target="_blank" rel="noopener" href="https://cutadapt.readthedocs.io/en/stable/guide.html">cutadapt官方文档</a>或者<a target="_blank" rel="noopener" href="https://www.jianshu.com/p/4ee2f4d2292f">cutdapt使用详解</a></p>
-<h3 id="鉴定具有barcode结构的reads-pair"><a href="#鉴定具有barcode结构的reads-pair" class="headerlink" title="鉴定具有barcode结构的reads pair"></a>鉴定具有barcode结构的reads pair</h3><ol>
-<li><p>定义READ类用以存储fastq数据，因为每一个READ ID都对应两条READ，所以这个类中存储的序列信息都是配对存在的。具体的脚本可以参考[identify_barcode.py]</p>
-<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">READ</span>:</span><br><span class="line">    <span class="comment">#define the READ object to store the information of paired reads</span></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">__init__</span>(<span class="params"> self , ID:<span class="built_in">str</span></span>) -&gt; <span class="literal">None</span>:</span><br><span class="line">        self.<span class="built_in">id</span> = ID</span><br><span class="line">        self.seq = [ <span class="string">&#x27;&#x27;</span> , <span class="string">&#x27;&#x27;</span>]</span><br><span class="line">        self.anno = [ <span class="string">&#x27;&#x27;</span> , <span class="string">&#x27;&#x27;</span>]</span><br><span class="line">        self.quality = [ <span class="string">&#x27;&#x27;</span> , <span class="string">&#x27;&#x27;</span> ]</span><br><span class="line">        self.barcode = <span class="string">&#x27;&#x27;</span></span><br><span class="line">        self.valid = <span class="literal">False</span></span><br><span class="line">        <span class="keyword">pass</span></span><br></pre></td></tr></table></figure></li>
-<li><p>从fastq文件中读取对应ID的read1与read2的序列与其他信息。gzip.open相对比较慢，用了据说比较快的pyfastx读取fq.gz文件。</p>
-<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> <span class="title function_">read_paired_fq_file</span>(<span class="params"> r1_file:<span class="built_in">str</span> , r2_file:<span class="built_in">str</span> , limit:<span class="built_in">int</span> = math.inf</span>):</span><br><span class="line">    reads_dic = &#123;&#125;</span><br><span class="line">    file_cnt = <span class="number">0</span>     <span class="comment">#mark which file is loading, read1 or read2 </span></span><br><span class="line">    <span class="keyword">for</span>  tmp_file <span class="keyword">in</span> [ r1_file , r2_file ]:</span><br><span class="line">        read_cnt = <span class="number">0</span></span><br><span class="line">        file_cnt += <span class="number">1</span></span><br><span class="line">        <span class="keyword">for</span> read <span class="keyword">in</span> pyfastx.Fastq( tmp_file ):</span><br><span class="line">            tmp_id = read.name[:-<span class="number">2</span>]</span><br><span class="line">            <span class="keyword">if</span> reads_dic.get( tmp_id):</span><br><span class="line">                reads_dic[ tmp_id ].add_read( seq =read.seq, anno= <span class="string">&#x27;+&#x27;</span> ,  quality = read.qual , kind = file_cnt )</span><br><span class="line">            <span class="keyword">else</span>:</span><br><span class="line">                reads_dic[ tmp_id ] = READ( tmp_id )</span><br><span class="line">                reads_dic[ tmp_id].add_read( seq =read.seq, anno= <span class="string">&#x27;+&#x27;</span> ,  quality = read.qual , kind = file_cnt )</span><br><span class="line">            read_cnt += <span class="number">1</span></span><br><span class="line">            <span class="keyword">if</span> read_cnt &gt; limit:</span><br><span class="line">                <span class="keyword">break</span></span><br><span class="line">    <span class="keyword">return</span> reads_dic</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>定义判断序列间是否匹配的函数，并根据barcode结构，编写拆分序列的脚本，并一一匹配，判断reads是否有效与对应的barcode编码</p>
-<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">#允许错配的函数</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">mispair_match</span>(<span class="params"> ref_s:<span class="built_in">str</span> , query_s:<span class="built_in">str</span> , limit:<span class="built_in">int</span> = <span class="number">1</span></span>) -&gt; <span class="built_in">bool</span>:</span><br><span class="line">    mis = <span class="number">0</span></span><br><span class="line">    <span class="keyword">for</span> i <span class="keyword">in</span> <span class="built_in">range</span>( <span class="built_in">len</span>(ref_s) ):</span><br><span class="line">        <span class="keyword">if</span> ref_s[i] == query_s[i]:</span><br><span class="line">            <span class="keyword">continue</span></span><br><span class="line">        <span class="keyword">else</span>:</span><br><span class="line">            mis += <span class="number">1</span></span><br><span class="line">    <span class="keyword">return</span> mis &lt;= limit</span><br></pre></td></tr></table></figure></li>
-<li><p>输出所有符合要求的reads分别到R1和R2文件中。上述所有脚本都可在[]找到</p>
-</li>
-</ol>
-<p>最后的命令行调用</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">Python identify_barcode.py -1 <span class="variable">$&#123;sample_ID&#125;</span>_cutadapt_R1.fq.gz  -2 <span class="variable">$&#123;sample_ID&#125;</span>_cutadapt_R2.fq.gz \</span><br><span class="line">-b 0127_barcode_pool  \</span><br><span class="line">-l TGGT,GAGA  \</span><br><span class="line">-o1 01.data/<span class="variable">$&#123;sample_ID&#125;</span>_filtered_R1   -o2 01.data/<span class="variable">$&#123;sample_ID&#125;</span>_filtered_R2 </span><br></pre></td></tr></table></figure>
-
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">-1,-2 #输入的R1和R2的fq文件</span><br><span class="line">-b #barcode库文件，不同位置的barcode库用##分割</span><br><span class="line">-l #linker序列，中间用,隔开</span><br><span class="line">-o1,-o2 #输出的R1和R2文件前缀</span><br></pre></td></tr></table></figure>
-
-<h2 id="Fastp过滤reads"><a href="#Fastp过滤reads" class="headerlink" title="Fastp过滤reads"></a>Fastp过滤reads</h2><p>主要就是去除一些裁剪后比较短的序列和低质量的reads。</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">fastp \</span><br><span class="line">--in1 <span class="variable">$&#123;sampleID&#125;</span>_R1.fq.gz \</span><br><span class="line">--in2 <span class="variable">$&#123;sampleID&#125;</span>_R2.fq.gz \</span><br><span class="line">--out1 <span class="variable">$&#123;sampleID&#125;</span>_clean_R1.fq.gz \</span><br><span class="line">--out2 <span class="variable">$&#123;sampleID&#125;</span>_clean_R2.fq.gz \</span><br><span class="line">--json <span class="variable">$&#123;sampleID&#125;</span>.json \</span><br><span class="line">--html <span class="variable">$&#123;sampleID&#125;</span>.html \</span><br><span class="line">--trim_poly_g --poly_g_min_len 10 \</span><br><span class="line">--trim_poly_x --poly_x_min_len 10 \</span><br><span class="line">--cut_front --cut_tail --cut_window_size 4 \</span><br><span class="line">--qualified_quality_phred 30 \</span><br><span class="line">--low_complexity_filter \</span><br><span class="line">--complexity_threshold 30 \</span><br><span class="line">--length_required 30 \</span><br><span class="line">--thread 4</span><br></pre></td></tr></table></figure>
-
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">--in1, --in2, --out1, --out2 #输入与输出文件</span><br><span class="line">--json, --html  #过滤报告输出文件</span><br><span class="line">--trim_poly_g, --trim_poly_x    # trim read两端的poly G/X</span><br><span class="line">--poly_g_min_len, --poly_x_min_len   #定义poly G/X的最短长度</span><br><span class="line"></span><br><span class="line">--cut_front, --cut_tail     #从5&#x27;端 和 3&#x27;端裁剪低质量或低复杂度的窗口</span><br><span class="line">--cut_window_size    # 定义窗口大小</span><br><span class="line">--qualified_quality_phred  #定义窗口内的低质量碱基的阈值</span><br><span class="line">--low_complexity_filter   #对于低复杂度的窗口进行过滤</span><br><span class="line">--complexity_threshold   #定义低复杂度的阈值</span><br><span class="line"></span><br><span class="line">--length_required    #定义裁剪后序列的最短长度，若是小于该值，则舍弃该序列</span><br><span class="line"></span><br><span class="line">--thread   #定义运行该程序的核数量</span><br><span class="line"></span><br></pre></td></tr></table></figure>
-      
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2024/03/03/test/" rel="prev" title="trim the reads with special apdater and barocde">
+      <i class="fa fa-chevron-left"></i> trim the reads with special apdater and barocde
+    </a></div>
+      <div class="post-nav-item"></div>
     </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
       </footer>
+    
   </article>
   
   
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2024/03/03/hello-world/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="John Doe">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Hexo">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2024/03/03/hello-world/" class="post-title-link" itemprop="url">Flying_doggy's home page</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">Posted on</span>
-              
-
-              <time title="Created: 2024-03-03 15:22:21 / Modified: 16:01:07" itemprop="dateCreated datePublished" datetime="2024-03-03T15:22:21+08:00">2024-03-03</time>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <p>Welcome to the home page of <strong>flying-doggy</strong>.<br>I am going to write down the report of daily <strong>bioinformatics</strong> work and some thoughts about everything.<br>This website would push me to insist on recording and I hope those work will be helpful to those who found it.</p>
-<p>By the way, if you have any question about my reports ,please leave message on my Github account or you can contact me with email: <a href="mailto:&#x67;&#117;&#106;&#x69;&#x61;&#x6e;&#104;&#117;&#x69;&#x40;&#x67;&#x65;&#x6e;&#101;&#99;&#116;&#x69;&#115;&#x2e;&#x61;&#x63;&#x2e;&#x63;&#x6e;">&#x67;&#117;&#106;&#x69;&#x61;&#x6e;&#104;&#117;&#x69;&#x40;&#x67;&#x65;&#x6e;&#101;&#99;&#116;&#x69;&#115;&#x2e;&#x61;&#x63;&#x2e;&#x63;&#x6e;</a>  .</p>
-<h1 id="MAPPING-ANALYSIS"><a href="#MAPPING-ANALYSIS" class="headerlink" title="MAPPING ANALYSIS"></a>MAPPING ANALYSIS</h1><h2 id="pre-processing-reads"><a href="#pre-processing-reads" class="headerlink" title="pre - processing reads"></a>pre - processing reads</h2><p>the application of fastp, Trimmomatic, cutadapt and some self-made script to deal with special structure of designed reads.</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo new <span class="string">&quot;My New Post&quot;</span></span><br></pre></td></tr></table></figure>
-<p>More info: <a target="_blank" rel="noopener" href="https://hexo.io/docs/writing.html">Writing</a></p>
-<h2 id="mapping-to-genome"><a href="#mapping-to-genome" class="headerlink" title="mapping to genome"></a>mapping to genome</h2><p>when the reads are trimmed and filtered, they can be mapped to the genome or assemblied.<br>this part will show the applications of 1. transcriptome-mapping: STAR etc ; 2. genome-mapping: BWA-MEM2 etc ; 3. Methylation-mapping: BISMARK etc ; 4. single-cell-mapping: cellranger </p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo server</span><br></pre></td></tr></table></figure>
-
-<p>More info: <a target="_blank" rel="noopener" href="https://hexo.io/docs/server.html">Server</a></p>
-<h2 id="downstream-analysis"><a href="#downstream-analysis" class="headerlink" title="downstream analysis"></a>downstream analysis</h2><p>mapped result are expected to be analysed to discover something we want.<br>we can use tools like Deeptools, bedtools, samtools etc to analyse the result. and it’s also important to make some scripts to complete interesting anlysis.</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo generate</span><br></pre></td></tr></table></figure>
-
-<p>More info: <a target="_blank" rel="noopener" href="https://hexo.io/docs/generating.html">Generating</a></p>
-<h1 id="GENOME-ANALYSIS"><a href="#GENOME-ANALYSIS" class="headerlink" title="GENOME ANALYSIS"></a>GENOME ANALYSIS</h1><p>phylogeny, insertion, deletion ,structral variation etc.<br>##</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo deploy</span><br></pre></td></tr></table></figure>
-
-<p>More info: <a target="_blank" rel="noopener" href="https://hexo.io/docs/one-command-deployment.html">Deployment</a></p>
-
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-
   
 
 
@@ -518,6 +355,7 @@
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Introduction"><span class="nav-number">1.</span> <span class="nav-text">Introduction</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#1-Install-software"><span class="nav-number">2.</span> <span class="nav-text">1. Install software</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-1-%E5%AE%89%E8%A3%85hifiasm"><span class="nav-number">2.1.</span> <span class="nav-text">1.1 安装hifiasm</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-1-1-conda%E5%AE%89%E8%A3%85"><span class="nav-number">2.1.1.</span> <span class="nav-text">1.1.1 conda安装</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-1-2-github%E5%AE%89%E8%A3%85"><span class="nav-number">2.1.2.</span> <span class="nav-text">1.1.2 github安装</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1-2-%E5%AE%89%E8%A3%85AGB-%EF%BC%88%E5%B0%86gfa%E8%BD%AC%E4%B8%BAfa%E6%96%87%E4%BB%B6-%E5%8F%AF%E9%80%89%EF%BC%89"><span class="nav-number">2.2.</span> <span class="nav-text">1.2 安装AGB （将gfa转为fa文件,可选）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1-3-juicer%E5%AE%89%E8%A3%85"><span class="nav-number">2.3.</span> <span class="nav-text">1.3 juicer安装</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1-4-3D-DNA%E5%AE%89%E8%A3%85"><span class="nav-number">2.4.</span> <span class="nav-text">1.4 3D-DNA安装</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#2-%E5%9F%BA%E5%9B%A0%E7%BB%84%E7%BB%84%E8%A3%85"><span class="nav-number">3.</span> <span class="nav-text">2. 基因组组装</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#2-1-hifiasm%E6%8B%BC%E6%8E%A5"><span class="nav-number">3.1.</span> <span class="nav-text">2.1 hifiasm拼接</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-2-juicer%E6%AF%94%E5%AF%B9"><span class="nav-number">3.2.</span> <span class="nav-text">2.2 juicer比对</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-3-3D-DNA%E6%8C%82%E8%BD%BD"><span class="nav-number">3.3.</span> <span class="nav-text">2.3 3D-DNA挂载</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#3-%E6%95%B0%E6%8D%AE%E8%AF%84%E4%BC%B0"><span class="nav-number">4.</span> <span class="nav-text">3. 数据评估</span></a></li></ol></div>
       </div>
       <!--/noindex-->
 
