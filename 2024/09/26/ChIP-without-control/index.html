@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="Pipeline of analysing ChIP-seq datas without control 在ChIP实验时，忘记设计了control空白对照，使得再后续MACS3 call peaks的时候无法使用 -c，会使最后的结果可能存在较多的假阳性，但也可以继续分析。  01.变量声明与数据预处理1.1 变量声明 12345678910sampleID    # 样本名称，测序结果文件前缀">
+<meta property="og:type" content="article">
+<meta property="og:title" content="ChIP_without_control">
+<meta property="og:url" content="http://example.com/2024/09/26/ChIP-without-control/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="Pipeline of analysing ChIP-seq datas without control 在ChIP实验时，忘记设计了control空白对照，使得再后续MACS3 call peaks的时候无法使用 -c，会使最后的结果可能存在较多的假阳性，但也可以继续分析。  01.变量声明与数据预处理1.1 变量声明 12345678910sampleID    # 样本名称，测序结果文件前缀">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="http://example.com/img/ChIP/9-FLAG-CHIP_frag.svg">
+<meta property="og:image" content="http://example.com/img/ChIP/SRR19318133_SRR19318134.png">
+<meta property="og:image" content="http://example.com/img/ChIP/raw_heatmap.png">
+<meta property="article:published_time" content="2024-09-26T06:52:00.000Z">
+<meta property="article:modified_time" content="2024-09-27T13:37:59.436Z">
+<meta property="article:author" content="John Doe">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/img/ChIP/9-FLAG-CHIP_frag.svg">
+
+<link rel="canonical" href="http://example.com/2024/09/26/ChIP-without-control/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+
+  <title>ChIP_without_control | Hexo</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Hexo</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2024/09/26/ChIP-without-control/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="John Doe">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hexo">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          ChIP_without_control
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2024-09-26 14:52:00" itemprop="dateCreated datePublished" datetime="2024-09-26T14:52:00+08:00">2024-09-26</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2024-09-27 21:37:59" itemprop="dateModified" datetime="2024-09-27T21:37:59+08:00">2024-09-27</time>
+              </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="Pipeline-of-analysing-ChIP-seq-datas-without-control"><a href="#Pipeline-of-analysing-ChIP-seq-datas-without-control" class="headerlink" title="Pipeline of analysing ChIP-seq datas without control"></a>Pipeline of analysing ChIP-seq datas without control</h1><blockquote>
+<p>在ChIP实验时，忘记设计了control空白对照，使得再后续MACS3 call peaks的时候无法使用 <code>-c</code>，会使最后的结果可能存在较多的假阳性，但也可以继续分析。</p>
+</blockquote>
+<h2 id="01-变量声明与数据预处理"><a href="#01-变量声明与数据预处理" class="headerlink" title="01.变量声明与数据预处理"></a>01.变量声明与数据预处理</h2><p>1.1 变量声明</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">sampleID    # 样本名称，测序结果文件前缀</span><br><span class="line">genome_idx  # 存储样本基因组的比对（BWA或 bowtie2等）索引</span><br><span class="line">genome_size # 基因组大小</span><br><span class="line">genome_gene_bed # 基因组基因位置注释文件，BED6格式</span><br><span class="line">data_path   # 存储测序结果的路径</span><br><span class="line">out_path    # 输出结果文件的路径</span><br><span class="line"></span><br><span class="line">sam_map_q=10    # 过滤比对结果的MAPQ阈值</span><br><span class="line">sam_sort_threads=20 # 使用samtools进行排序时使用的核数</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>1.2 数据预处理<br>使用<a target="_blank" rel="noopener" href="https://github.com/OpenGene/fastp">fastp</a>对原始测序数据进行质量控制，主要去除一些低质量碱基与接头。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">fastp --in1 $&#123;data_path&#125;/$&#123;sampleID&#125;_1.fq.gz --in2 $&#123;data_path&#125;/$&#123;sampleID&#125;_2.fq.gz \</span><br><span class="line">    --out1 $&#123;out_path&#125;/$&#123;sampleID&#125;_clean_R1.fq.gz --out2 $&#123;out_path&#125;/$&#123;sampleID&#125;_clean_R2.fq.gz \</span><br><span class="line">    --json $&#123;out_path&#125;/$&#123;sampleID&#125;.json --html $&#123;out_path&#125;/$&#123;sampleID&#125;.html \</span><br><span class="line">    --trim_poly_g --poly_g_min_len 10 \</span><br><span class="line">    --trim_poly_x --poly_x_min_len 10 \</span><br><span class="line">    --cut_front --cut_tail \</span><br><span class="line">    --cut_window_size 4 \</span><br><span class="line">    --qualified_quality_phred 30 \</span><br><span class="line">    --low_complexity_filter --complexity_threshold 30 \</span><br><span class="line">    --length_required 30 \</span><br><span class="line">    --thread 10 &gt; $&#123;out_path&#125;/$&#123;sampleID&#125;_fastp.log</span><br></pre></td></tr></table></figure>
+
+<h2 id="02-基因组比对"><a href="#02-基因组比对" class="headerlink" title="02.基因组比对"></a>02.基因组比对</h2><p>使用BWA-MEM2, bowtie2 或其他基因组比对文件，将fastp处理后的clean data比对到参考基因组上，初步获取ChIP-seq比对结果。若在原始数据中存在 SPIKE IN 序列，则需要再将测序文件与 SPIKE IN的比对索引基因比对，数据的处理方式与下述相同，处理过程中使用 <code>$&#123;sampleID&#125;_spikein</code> 指代。 </p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">在本次实验中主要使用了BWA-MEM2进行比对</span></span><br><span class="line">bwa-mem2 mem -t 20 \</span><br><span class="line">    $&#123;genome_idx&#125;  \</span><br><span class="line">    $&#123;data_path&#125;/$&#123;sampleID&#125;_clean_R1.fq.gz $&#123;data_path&#125;/$&#123;sampleID&#125;_clean_R2.fq.gz \</span><br><span class="line">    -o $&#123;out_path&#125;/$&#123;sampleID&#125;.sam &amp;</span><br></pre></td></tr></table></figure>
+
+<p>使用samtools对比对结果进行统计，过滤结果中的低质量比对，并对比对文件进行排序便于后续分析</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">samtools view -Sb -F 0x04 -q $&#123;sam_map_q&#125; $&#123;out_path&#125;/$&#123;sampleID&#125;.sam &gt; $&#123;out_path&#125;/$&#123;sampleID&#125;.bam</span><br><span class="line">samtools sort --threads $&#123;sam_sort_threads&#125; $&#123;out_path&#125;/$&#123;sampleID&#125;.bam -o $&#123;out_path&#125;/sorted_$&#123;sampleID&#125;.bam</span><br></pre></td></tr></table></figure>
+
+<p>统计插入片段的大小分布并可视化（本次实验中使用自己编写的脚本，也可以使用Deeptools中的软件），简单评估实验数据的可靠性。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">samtools view -F 0x04 $&#123;out_path&#125;/sorted_$&#123;sampleID&#125;.bam | \</span><br><span class="line">    awk -F &#x27;\t&#x27; &#x27;function abs(x)&#123;return ((x &lt; 0.0) ? -x : x)&#125; &#123;print $1&quot;\t&quot;abs($9)&#125;&#x27;| \</span><br><span class="line">    sort | uniq  | cut -f 2 | sort | uniq -c  | \</span><br><span class="line">    awk -v OFS=&quot;\t&quot; &#x27;&#123;print $2, $1&#125;&#x27; &gt; $&#123;out_path&#125;/$&#123;sampleID&#125;_fragmentLen.txt</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">fragmentLen.txt结果文件包含两列，第一列为片段的长度，第二列为该长度片段在本次实验中的总数</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">自己编写脚本可视化片段大小分布，第一个参数为样本名称，第二个参数为片段最长长度</span></span><br><span class="line">plot_frg.py $&#123;out_path&#125;/$&#123;sampleID&#125; 1000   </span><br></pre></td></tr></table></figure>
+
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># plt_frg.py</span></span><br><span class="line"><span class="keyword">import</span> os</span><br><span class="line"><span class="keyword">import</span> sys</span><br><span class="line"><span class="keyword">import</span> matplotlib.pyplot <span class="keyword">as</span> plt</span><br><span class="line"><span class="keyword">import</span> seaborn <span class="keyword">as</span> sns</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">read_frag_file</span>(<span class="params"> file_path:<span class="built_in">str</span> </span>):</span><br><span class="line">    cnt_dic = &#123;&#125;</span><br><span class="line">    <span class="keyword">with</span> <span class="built_in">open</span>( file= file_path ) <span class="keyword">as</span> f:</span><br><span class="line">        datas = f.readlines()</span><br><span class="line">        <span class="keyword">for</span> tmp_line  <span class="keyword">in</span>  datas:</span><br><span class="line">            size, tmp_cnt = <span class="built_in">map</span>(<span class="built_in">int</span>, tmp_line.strip().split(<span class="string">&#x27;\t&#x27;</span>) )</span><br><span class="line">            cnt_dic[size] = tmp_cnt</span><br><span class="line">    <span class="keyword">return</span> cnt_dic</span><br><span class="line"></span><br><span class="line">sample=sys.argv[<span class="number">1</span>]</span><br><span class="line">frag_file= sample + <span class="string">&#x27;_fragmentLen.txt&#x27;</span></span><br><span class="line">limit = <span class="built_in">int</span>(sys.argv[<span class="number">2</span>])</span><br><span class="line">cnt_dic = read_frag_file( frag_file )</span><br><span class="line">plt.plot( [ i <span class="keyword">for</span> i <span class="keyword">in</span> <span class="built_in">range</span>(limit) ] , [cnt_dic.get(i,<span class="number">0</span>) <span class="keyword">for</span> i <span class="keyword">in</span> <span class="built_in">range</span>(limit)])</span><br><span class="line">plt.title(<span class="string">&#x27;%s Fragment Size Distribution&#x27;</span>%(sample))</span><br><span class="line"></span><br><span class="line">plt.savefig( <span class="string">&quot;%s_frag.svg&quot;</span>%(sample) )</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p><img src="/./img/ChIP/9-FLAG-CHIP_frag.svg" alt="9-ChIP的插入片段大小分布"></p>
+<h2 id="03-Call-Peak"><a href="#03-Call-Peak" class="headerlink" title="03. Call Peak"></a>03. Call Peak</h2><p>要根据比对结果，统计不同基因组区间上的覆盖度来判断实验蛋白的潜在结合区域：在某一基因组区间内的reads数量越多，表明该区间越有可能被实验蛋白捕获，更有可能是潜在的结合位点。<br>通常使用 <strong>MACS3</strong> 来进行ChIP-seq数据的Peak calling，在类似的<a target="_blank" rel="noopener" href="https://yezhengstat.github.io/CUTTag_tutorial/#VI_Peak_calling">CUTTag数据分析流程</a>中中作者推荐使用SEACR。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">macs3 callpeak -t $&#123;out_path&#125;/sorted_$&#123;sampleID&#125;.bam  -f BAMPE -n $&#123;out_path&#125;/$&#123;sampleID&#125; -g $&#123;genome_size&#125; -B -q 0.01 --keep-dup all</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">-t, treat 给定实验组的比对结果文件</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">-c, control 给定对照组的比对结果文件，便于筛选真阳性的peak</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">-f, format 表示比对文件的格式</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">-n, 输出结果的前缀</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">-g, 参考基因组大小</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">--keep-dup, 表示对处理重复的方法，ChIP-<span class="built_in">seq</span>一般不进行PCR去重</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">-B, 存储统计基因组区域所有reads pileup的bdg文件</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">-q, Q值的阈值</span></span><br></pre></td></tr></table></figure>
+<p>使用macs3 callpeak之后，会得到<code>$&#123;sampleID&#125;_peaks.xls</code> <code>$&#123;sampleID&#125;_peaks.narrowPeak</code> <code>$&#123;sampleID&#125;_summits.bed</code>等文件，分别记录了每个peak的宽度，在基因组上的位置，样本数据的覆盖信号值，置信度，peak中心区域，peak峰值点信息等。<br><br></p>
+<p>（可选）从bam文件中提取分布在peaks内的比对结果，可以看到peaks在基因组上的分布情况</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">bedtools intersect -a  $&#123;out_path&#125;/sorted_$&#123;sampleID&#125;.bam  -b $&#123;out_path&#125;/$&#123;sampleID&#125;_peaks.narrowPeak  &gt; $&#123;out_path&#125;/$&#123;sampleID&#125;_peaks.bam</span><br></pre></td></tr></table></figure>
+
+<p>（可选）提取top0.01的Peaks 尽可能减少假阳性结果对分析结果的影响</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">a=$( wc -l $&#123;out_path&#125;/$&#123;sampleID&#125;_peaks.narrowPeak | cut -d &#x27; &#x27; -f 1 ) ; </span><br><span class="line">sort -k 5nr $&#123;out_path&#125;/$&#123;sampleID&#125;_peaks.narrowPeak | head -$(( $&#123;a&#125; / 100 )) | sort -k 1n -k 2n &gt; $&#123;out_path&#125;/$&#123;sampleID&#125;_top0.01_peaks.bed</span><br></pre></td></tr></table></figure>
+
+<p>（可选）多个样本间进行peaks的比较，分析差异peak，共有peak等， 这个可能需要spike-in的数据标准化会更准确。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">待做 DiffBind、 DESeq2 、 bedtools</span><br></pre></td></tr></table></figure>
+
+
+<p>（可选）使用IDR计算两个样本peaks之间的相关性，通常用于检查重复样本之间的重合率。该软件要求在计算之前，先按照peak的置信度对各个peak进行排序操作</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"># narrowPeak BED文件按照pval排序</span><br><span class="line">sort -k8,8nr $&#123;sampleID&#125;_peaks.narrowPeak &gt; sorted_$&#123;sampleID&#125;_peaks.narrowPeak</span><br><span class="line"></span><br><span class="line">idr --samples sorted_$&#123;sampleID1&#125;.narrowPeak sorted_$&#123;sampleID2&#125;.narrowPeak \</span><br><span class="line">    --input-file-type narrowPeak \</span><br><span class="line">    --rank signal.value \</span><br><span class="line">    --output-file $&#123;sampleID1&#125;_$&#123;sampleID2&#125; \</span><br><span class="line">    --plot \</span><br><span class="line">    --log-output-file $&#123;sampleID1&#125;_$&#123;sampleID2&#125;.idr.log</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<p>这一步可以生成<code>$&#123;sampleID1&#125;_$&#123;sampleID2&#125;</code> <code>$&#123;sampleID1&#125;_$&#123;sampleID2&#125;.png</code> <code>$&#123;sampleID1&#125;_$&#123;sampleID2&#125;.idr.log</code>三个文件，分别记录了每个peak在两个样本之间的分布与重叠，peaks的可重复性，两个样本之间重复peaks的比例</p>
+<p>具体的坐标轴意义与解读方法可以参考<a target="_blank" rel="noopener" href="https://github.com/nboley/idr">官方文档</a>，大概就是上面两幅图的点在y&#x3D;x对角线上越密集表示两个样本之间的重叠率越高，实验的可重复性越好。<br><img src="/./img/ChIP/SRR19318133_SRR19318134.png" alt="idr.png"></p>
+<h2 id="04-下游分析与可视化展示"><a href="#04-下游分析与可视化展示" class="headerlink" title="04.下游分析与可视化展示"></a>04.下游分析与可视化展示</h2><p>（可选）根据peaks文件所提供的基因组位置信息，提取对应的序列，使用homer或meme分析目的蛋白的结合motif</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">待做</span><br></pre></td></tr></table></figure>
+
+<p>使用Deeptools中的软件分析ChIP-seq捕获的序列在TSS位点，peaks区域及其周边的分布</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">将bam文件转化为bw文件</span></span><br><span class="line">samtools index $&#123;out_path&#125;/sorted_$&#123;sampleID&#125;.bam</span><br><span class="line">bamCoverage -b $&#123;out_path&#125;/sorted_$&#123;sampleID&#125;.bam -o $&#123;out_path&#125;/sorted_$&#123;sampleID&#125;_raw.bw </span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">根据参考基因组的注释bed文件，统计捕获序列在各个基因区域的富集情况</span></span><br><span class="line">computeMatrix scale-regions -S $&#123;out_path&#125;/sorted_$&#123;sampleID&#125;_raw.bw  \</span><br><span class="line">                            -R $&#123;genome_gene_bed&#125; \</span><br><span class="line">                            --beforeRegionStartLength 3000 \</span><br><span class="line">                            --regionBodyLength 3000 \</span><br><span class="line">                            --afterRegionStartLength 3000 \</span><br><span class="line">                            --skipZeros -o $&#123;out_path&#125;/$&#123;sampleID&#125;_raw_matrix_gene.mat.gz -p 20</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">可视化捕获序列在各区域的分布强度</span></span><br><span class="line">plotHeatmap -m $&#123;out_path&#125;/$&#123;sampleID&#125;_raw_matrix_gene.mat.gz \</span><br><span class="line">            -out $&#123;out_path&#125;/$&#123;sampleID&#125;_peaks_heatmap.png --sortUsing sum</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">根据得到的peaks文件，统计捕获序列在peaks区域的富集情况</span></span><br><span class="line">computeMatrix reference-point -S $&#123;out_path&#125;/sorted_$&#123;sampleID&#125;_raw.bw \</span><br><span class="line">                              -R $&#123;out_path&#125;/$&#123;sampleID&#125;_peaks.narrowPeak \</span><br><span class="line">                              -a 3000 \</span><br><span class="line">                              --referencePoint center \</span><br><span class="line">                              -b  3000 \</span><br><span class="line">                              --skipZeros -o $&#123;out_path&#125;/$&#123;sampleID&#125;_Peak.mat.gz -p 20</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">可视化捕获序列在各区域的分布强度</span></span><br><span class="line">plotHeatmap -m &#123;out_path&#125;/$&#123;sampleID&#125;_Peak.mat.gz -out &#123;out_path&#125;/$&#123;sampleID&#125;_Peak_heatmap.png --sortUsing sum --startLabel &quot;Peak Start&quot; -\</span><br><span class="line">-endLabel &quot;Peak End&quot; --xAxisLabel &quot;&quot; --regionsLabel &quot;Peaks&quot; --samplesLabel $&#123;sampleID&#125;</span><br></pre></td></tr></table></figure>
+<p><img src="/img/ChIP/raw_heatmap.png" alt="捕获序列在基因区域的覆盖情况"></p>
+<h2 id="05-总结"><a href="#05-总结" class="headerlink" title="05. 总结"></a>05. 总结</h2><ul>
+<li>数据的预处理过程通过fastp实现，主要包括过滤低质量的reads，切割低质量的片段，去除接头等常规基因组数据预处理流程。</li>
+<li>完成比对之后，首先需要提取比对结果中的每个PE的Insert size，来判断数据质量，ChIP-seq捕获的片段长度峰值通常在200-400bp左右</li>
+<li>Spike-in数据可以更加准确地去除不同样本间测序深度的差异</li>
+<li>应该注意比较样本间的重复性如何，评估实验结果的可靠性与可重复性。</li>
+<li>完成了Peak calling之后，可以通过 ①选取top，②差异比对，③共性筛选 等方法缩小Peaks范围（后者需要多个样本间数据相互校正）。</li>
+<li>下游分析主要根据Peaks的基因组分布特征（特异分布于promoter区之类的）与Peaks内的序列特征（motif）</li>
+</ul>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2024/05/01/transcriptome-analysis/" rel="prev" title="transcriptome_analysis">
+      <i class="fa fa-chevron-left"></i> transcriptome_analysis
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Pipeline-of-analysing-ChIP-seq-datas-without-control"><span class="nav-number">1.</span> <span class="nav-text">Pipeline of analysing ChIP-seq datas without control</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#01-%E5%8F%98%E9%87%8F%E5%A3%B0%E6%98%8E%E4%B8%8E%E6%95%B0%E6%8D%AE%E9%A2%84%E5%A4%84%E7%90%86"><span class="nav-number">1.1.</span> <span class="nav-text">01.变量声明与数据预处理</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#02-%E5%9F%BA%E5%9B%A0%E7%BB%84%E6%AF%94%E5%AF%B9"><span class="nav-number">1.2.</span> <span class="nav-text">02.基因组比对</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#03-Call-Peak"><span class="nav-number">1.3.</span> <span class="nav-text">03. Call Peak</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#04-%E4%B8%8B%E6%B8%B8%E5%88%86%E6%9E%90%E4%B8%8E%E5%8F%AF%E8%A7%86%E5%8C%96%E5%B1%95%E7%A4%BA"><span class="nav-number">1.4.</span> <span class="nav-text">04.下游分析与可视化展示</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#05-%E6%80%BB%E7%BB%93"><span class="nav-number">1.5.</span> <span class="nav-text">05. 总结</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">John Doe</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">5</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+        <span class="site-state-item-count">3</span>
+        <span class="site-state-item-name">categories</span>
+      </div>
+      <div class="site-state-item site-state-tags">
+        <span class="site-state-item-count">10</span>
+        <span class="site-state-item-name">tags</span>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">John Doe</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>
