@@ -150,6 +150,306 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2024/10/27/KEGG-API/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="John Doe">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hexo">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2024/10/27/KEGG-API/" class="post-title-link" itemprop="url">KEGG_API</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2024-10-27 22:32:31" itemprop="dateCreated datePublished" datetime="2024-10-27T22:32:31+08:00">2024-10-27</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2024-10-28 15:40:48" itemprop="dateModified" datetime="2024-10-28T15:40:48+08:00">2024-10-28</time>
+              </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="使用KEGG-API获取代谢通路数据"><a href="#使用KEGG-API获取代谢通路数据" class="headerlink" title="使用KEGG API获取代谢通路数据"></a>使用KEGG API获取代谢通路数据</h1><p><a target="_blank" rel="noopener" href="https://www.kegg.jp/">KEGG数据库</a>中包含了大量与细胞代谢，分子层级调控相关的数据信息，是做通路分析的重要且权威的数据库网站。</p>
+<p>在科研实践的过程中，我们关注于某一特定的代谢通路，例如光合作用。那么自然而然地，我们想要知道，有哪些基因，哪些代谢物参与到光合作用过程中。那么我们就可以在KEGG官方站点中搜索”photosynthesis”，找到对应的Pathway编号(map开头)，获取光合作用这条通路的大致信息。<br><img src="/./img/KEGG_API/map00195.png" alt="KEGG中map页面示例(map00195)"><br>更进一步，我们想要去了解这条通路中包含的各个代谢物与基因，则我们要去找到他对应的KO pathway编号(ko开头)，就可以在新的页面中获取该通路涉及的基因与代谢物等。<br><img src="/./img/KEGG_API/map00195_ko.png" alt="KEGG中map页面中寻找ko编号(map00195)">  </p>
+<p>但是通路涉及的基因与代谢物数量往往很多，很难再一个个手动操作去获取其对应信息。于是在这个时候，我们就需要通过调用<a target="_blank" rel="noopener" href="https://www.kegg.jp/kegg/rest/">KEGG的API</a>(个人数据库提供一个网络接口让用户可以更加快捷的访问数据库内的数据)去批量获取代谢通路数据了。<br><img src="/./img/KEGG_API/ko00195.png" alt="KEGG中ko页面示例(map00195)"></p>
+<p>tips: KEGG中的编号前缀均有其意义，例如 前缀C代表Compound，表明<code>CXXXX</code> 该ID对应的为一个化合物……可以参考<a target="_blank" rel="noopener" href="https://www.kegg.jp/kegg/rest/keggapi.html">官方文档</a>或其他<a target="_blank" rel="noopener" href="https://www.jianshu.com/p/d7656c2e2cbe">介绍KEGG数据库的文档</a></p>
+<h2 id="明确调用API需求"><a href="#明确调用API需求" class="headerlink" title="明确调用API需求"></a>明确调用API需求</h2><p>我主要想去获取参与到 光合作用 代谢通路上的所有基因的名称(Name)与简写(Symbol)，而每一个基因（准确来说是KEGG ORTHOLOGY,KO）在KEGG上的介绍页面路径为: <a target="_blank" rel="noopener" href="https://www.kegg.jp/entry/K0XXXX">https://www.kegg.jp/entry/K0XXXX</a> , 数据排列情况如下所示。<br><img src="/./img/KEGG_API/K02718.png" alt="KEGG中K编号页面示例(K02718)"></p>
+<p>所以，只需要：<br>①获取KO编号<br>②构建出访问KEGG数据库中该基因编号的信息路径<br>③然后使用requests工具，获取对应路径所包含的信息<br>④提取信息中的Symbol与Name<br>随后，就可以完成基因信息的提取。</p>
+<p>tips:关于html文档的解析与html元素的解析可能会在后续的文档中介绍。</p>
+<h2 id="调用API脚本"><a href="#调用API脚本" class="headerlink" title="调用API脚本"></a>调用API脚本</h2><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> requests</span><br><span class="line"><span class="keyword">from</span> bs4 <span class="keyword">import</span> BeautifulSoup </span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">get_labels_in_kegg_entry_html</span>(<span class="params">tmp_soup, key:<span class="built_in">str</span></span>):  </span><br><span class="line">    <span class="string">&quot;&quot;&quot;  </span></span><br><span class="line"><span class="string">    从KEGG数据库条目的HTML内容中提取特定键（key）对应的标签（label）值。  </span></span><br><span class="line"><span class="string">  </span></span><br><span class="line"><span class="string">    参数:  </span></span><br><span class="line"><span class="string">    tmp_soup (BeautifulSoup对象): 包含KEGG数据库条目HTML内容的BeautifulSoup对象。  </span></span><br><span class="line"><span class="string">    key (str): 要查找的标签名称的字符串。  </span></span><br><span class="line"><span class="string">  </span></span><br><span class="line"><span class="string">    返回:  </span></span><br><span class="line"><span class="string">    str: 如果找到对应的标签，则返回其文本内容（去除前后空白）。  </span></span><br><span class="line"><span class="string">    None: 如果没有找到对应的标签，则返回None并打印一条消息。  </span></span><br><span class="line"><span class="string">    &quot;&quot;&quot;</span>  </span><br><span class="line">    <span class="comment"># 在HTML内容中查找包含指定键的&lt;th&gt;标签。 由于KEGG页面中主要是这个标签，可以根据具体API所需调用高的内容更换标签  </span></span><br><span class="line">    <span class="comment"># 使用lambda函数来检查&lt;th&gt;标签的文本内容是否包含指定的键。  </span></span><br><span class="line">    tmp_th = tmp_soup.find(<span class="string">&#x27;th&#x27;</span>, string=<span class="keyword">lambda</span> a: <span class="built_in">isinstance</span>(a, <span class="built_in">str</span>) <span class="keyword">and</span> key <span class="keyword">in</span> a)  </span><br><span class="line">      </span><br><span class="line">    <span class="comment"># 如果找到了对应的&lt;th&gt;标签  </span></span><br><span class="line">    <span class="keyword">if</span> tmp_th:  </span><br><span class="line">        <span class="comment"># 找到&lt;th&gt;标签的下一个同级&lt;td&gt;标签，它通常包含标签的值。  </span></span><br><span class="line">        tmp_td = tmp_th.find_next_sibling(<span class="string">&#x27;td&#x27;</span>)  </span><br><span class="line">        <span class="comment"># 返回&lt;td&gt;标签中的文本内容，并去除前后的空白字符。  </span></span><br><span class="line">        <span class="keyword">return</span> tmp_td.get_text().strip()  </span><br><span class="line">    <span class="keyword">else</span>:  </span><br><span class="line">        <span class="comment"># 如果没有找到对应的&lt;th&gt;标签，打印一条消息说明未找到。  </span></span><br><span class="line">        <span class="built_in">print</span>(<span class="string">f&#x27;Not Found <span class="subst">&#123;key&#125;</span> in the query soup&#x27;</span>)  </span><br><span class="line">        <span class="comment"># 返回None表示未找到对应的标签值。  </span></span><br><span class="line">        <span class="keyword">return</span> <span class="literal">None</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># API前缀</span></span><br><span class="line">prefix_url=<span class="string">&quot;https://www.kegg.jp/entry/&quot;</span></span><br><span class="line">querys = [ <span class="string">&quot;K00001&quot;</span> , ... ]     <span class="comment"># 需要查询的基因的K编号</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">for</span> tmp_k_ID <span class="keyword">in</span> querys:</span><br><span class="line">    <span class="comment"># 预处理K编号，避免空格等字符输入</span></span><br><span class="line">    tmp_k_ID = tmp_k_ID.strip()</span><br><span class="line"></span><br><span class="line">    <span class="comment"># 调用requests.get方法获取对应K编号基因的KEGG API内容</span></span><br><span class="line">    tmp_response = requests.get( prefix_url+tmp_k_ID )</span><br><span class="line"></span><br><span class="line">    <span class="comment"># 将网页文本内容解析为soup对象</span></span><br><span class="line">    tmp_sp = BeautifulSoup( tmp_response.text , <span class="string">&quot;html.parser&quot;</span> )</span><br><span class="line"></span><br><span class="line">    <span class="comment"># 获取Symbol标签和Name标签后的数据信息</span></span><br><span class="line">    tmp_sym, tmp_name = get_labels_in_kegg_entry_html( tmp_sp , <span class="string">&#x27;Symbol&#x27;</span>) , get_labels_in_kegg_entry_html( tmp_sp , <span class="string">&#x27;Name&#x27;</span>)</span><br><span class="line"></span><br><span class="line">    <span class="comment"># 输出该K编号的基因信息结果</span></span><br><span class="line">    <span class="built_in">print</span>( tmp_k_ID+<span class="string">&#x27;*&#x27;</span>+ tmp_sym +<span class="string">&#x27;*&#x27;</span>+ tmp_name)</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>具体BeatifulSoup的使用方法可以参考其<a target="_blank" rel="noopener" href="https://beautifulsoup.cn/">官方文档</a>，后续我个人应当也会更新相应的用法与我自身对这个包的理解。</p>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2024/10/22/fastp-Usage/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="John Doe">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hexo">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2024/10/22/fastp-Usage/" class="post-title-link" itemprop="url">fastp Usage</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2024-10-22 20:16:53" itemprop="dateCreated datePublished" datetime="2024-10-22T20:16:53+08:00">2024-10-22</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2024-10-24 23:09:36" itemprop="dateModified" datetime="2024-10-24T23:09:36+08:00">2024-10-24</time>
+              </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="Fastp使用方法与原理详解"><a href="#Fastp使用方法与原理详解" class="headerlink" title="Fastp使用方法与原理详解"></a>Fastp使用方法与原理详解</h1><p>平时在收到公司返回的原始数据后，我通常使用Fastp来进行数据的质量控制与预处理，一方面是因为使用的命令行比较方便，另一方面也是因为他的速度快于其他的质控&#x2F;预处理软件。在之前的工作流程中，我也介绍了这个软件在命令行的简单使用方法。总觉得对测序数据预处理的原理与方法了解的不够深入。</p>
+<p>因此，我想要通过这篇博客再深入了解数据预处理的相关知识与Fastp命令各个参数的详解。</p>
+<h2 id="测序数据"><a href="#测序数据" class="headerlink" title="测序数据"></a>测序数据</h2><p>无论是任何测序数据类型（一代，二代，三代等），它主要可以由两个信息去描述:一个是 <strong>序列信息</strong> ,另一个就是每个测序位点的 __质量信息__。<br>以二代测序为例，我们通常得到的测序结果的文件格式为 <strong>fastq</strong> 格式，每一条测序信息由四行内容组成：①ID，②序列信息，③附加(一般都是空的)，④质量信息(phred)</p>
+<blockquote>
+<p>@E200028359L1C001R00300000544&#x2F;2<br>ACACATAAAATCTTTGGACCCTTTAAG<br>+<br>FGGGGFFGGFGFGGGFGFGFGG&lt;GEGF</p>
+</blockquote>
+<p>如上的四行就表明了一条测序信息：该条序列的ID为<code>E200028359L1C001R00300000544</code>(由于是双端测序，所以ID后面还带了一个<code>/2</code>，表明其为 read2 )；测序仪测得该条序列的碱基顺序为<code>ACACATAAAATCTTTGGACCCTTTAAG</code>；每个碱基的对应的测序质量为<code>FGGGGFFGGFGFGGGFGFGFGG&lt;GEGF</code>。</p>
+<p>值得注意的是，不同的公司可能会用不同的质量编码标准，可以参考<a target="_blank" rel="noopener" href="https://blog.sciencenet.cn/blog-630246-813262.html">这一篇文章</a>或<a target="_blank" rel="noopener" href="https://www.phrap.com/phred/">phred官方说明</a>。</p>
+<h2 id="质量控制（Quality-Control，QC）"><a href="#质量控制（Quality-Control，QC）" class="headerlink" title="质量控制（Quality Control，QC）"></a>质量控制（Quality Control，QC）</h2><p>那么基于测序信息所提供的两种信息（序列，质量），我们该如何对测序数据进行质量控制？</p>
+<p><strong>序列信息</strong></p>
+<ul>
+<li>序列重复度</li>
+<li>序列各位置的碱基分布（个人认为与二代测序原理相关）</li>
+<li>k-mer偏好</li>
+<li>接头污染</li>
+<li>碱基平衡，ATCG的总比例应该与测序样本原始比例相当</li>
+<li>未知碱基数量，有些位点测出来的碱基可能为N</li>
+</ul>
+<p><strong>质量信息</strong></p>
+<ul>
+<li>每条序列的测序质量</li>
+<li>序列个位置的测序质量（个人认为与二代测序原理相关）</li>
+</ul>
+<p><strong>其他</strong></p>
+<ul>
+<li>序列长度分布</li>
+<li>PE数据的插入片段大小，我们可以根据双端数据在首尾之间的重叠区域判断原始片段的长度</li>
+</ul>
+<p>不同的质量控制软件有不同的指标去评估每一条数据的测序质量，在<code>fastp</code>中还用了序列的复杂度作为评估指标。质量控制一方面可以让我们了解测序数据整体上是否存在一些问题，另一方面可以过滤异常的低质量reads，目的是令最终的reads都是质量合格的reads。</p>
+<h2 id="预处理（Preprocessing）"><a href="#预处理（Preprocessing）" class="headerlink" title="预处理（Preprocessing）"></a>预处理（Preprocessing）</h2><p>严格来说，上述的 <strong>质量控制</strong> 也属于数据预处理的一部分。但我们从上面的内容可以看到，传统的质量控制步骤主要是对 <strong>整条reads</strong> 去进行操作的，比如过滤掉整条低质量reads。</p>
+<p>但是在实际操作过程中，我们会发现所有的reads会存在一些普遍问题，例如：</p>
+<p><strong>序列信息</strong></p>
+<ul>
+<li>片段被完全测通，接头序列污染了文库</li>
+<li>测序文库特有结构，特定区域碱基不平衡</li>
+</ul>
+<p><strong>质量信息</strong></p>
+<ul>
+<li>开头的测序质量比较差，后面序列的碱基质量稳定</li>
+</ul>
+<p>采取原来整条过滤的方法，会过滤掉其中包含了大量有效信息的内容。<br>这些问题或需求的存在使得我们需要对测序结果进行 <strong>局部处理（裁剪）</strong> ：裁剪掉低质量序列，裁剪掉接头序列，裁剪掉特有文库，使之能够符合后续比对或进行其他操作的要求。</p>
+<p>综上所述，我们主要通过测序数据的序列信息和质量信息，对测序数据进行裁剪与质量控制等操作，最终得到的每条序列都是有价值且质量合格的。</p>
+<h2 id="Fastp使用方法"><a href="#Fastp使用方法" class="headerlink" title="Fastp使用方法"></a>Fastp使用方法</h2><p>那么按照上述逻辑，我们需要进行：质量控制(FastQC)→裁剪(Trimmomatic)→质量控制(FastQC)的方式完成数据的预处理。<br><code>Fastp</code>将上述过程进行整合，并采用并行计算的方法加速了数据预处理过程。</p>
+<hr>
+<p>参考资料<br>[1] <a target="_blank" rel="noopener" href="https://open.bioqueue.org/home/knowledge/showKnowledge/sig/fastp">Manual of fastp</a><br>[2] <a target="_blank" rel="noopener" href="https://onlinelibrary.wiley.com/doi/10.1002/imt2.107">Ultrafast one-pass FASTQ data preprocessing, quality control, and deduplication using fastp</a></p>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2024/10/10/Demension-Reduction/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="John Doe">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hexo">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2024/10/10/Demension-Reduction/" class="post-title-link" itemprop="url">Demension Reduction</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2024-10-10 15:09:05" itemprop="dateCreated datePublished" datetime="2024-10-10T15:09:05+08:00">2024-10-10</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2024-10-11 16:18:03" itemprop="dateModified" datetime="2024-10-11T16:18:03+08:00">2024-10-11</time>
+              </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="Introduction"><a href="#Introduction" class="headerlink" title="Introduction"></a>Introduction</h1><p>高维数据的处理难度大，耗时长，且不同维度之间的相关性或数据的稀疏性又会影响最后的分析结果。对高维数据进行降维能够有效提升数据的分析效率。<br>降维顾名思义就是降低数据的维度（Demension），比如将一个100维的向量转化为一个2维的向量，这就是降维。那么如何实现100D → 2D呢？</p>
+<blockquote>
+<p>以下文字并不专业，只是我个人的朴素理解，具体的降维概念与详细解释可以参考<a target="_blank" rel="noopener" href="https://blog.csdn.net/ck784101777/article/details/107148133">数据降维之特征选择</a>或者直接咨询人工智能</p>
+</blockquote>
+<ol>
+<li>维度筛选。我只选择第1，2维的数据作为每个样本点的数据表示，其他98维的数据我全部舍弃。</li>
+<li>维度整合。例如我把前面50维和后50维的数据求和，所得的2个和即为每个样本点的数据表示。<br>……</li>
+</ol>
+<p>当然，看了前面我举的两个例子，你可能会觉得这好像可行，但这听上去并不科学啊！为什么选择这些维度或维度组合作为特征呢？为什么是相加而不是相乘呢？</p>
+<p>所以，大家常用的降维方法并不是上文提的那种朴素降维方法（但部分情况下也可以考虑上述降维方法）。笔者知道常用的降维方法有<a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/37777074">PCA(线性降维方法)</a>，<a target="_blank" rel="noopener" href="https://blog.csdn.net/scott198510/article/details/76099700">t-SNE(非线性降维方法)</a>，<a target="_blank" rel="noopener" href="https://www.jianshu.com/p/704060deaa3f">UMAP(非线性降维方法)</a>，其数学原理与科学性并不在本文中展开了，在本文中主要分享这些 __降维方法在python中如何使用sklearn等工具包实现__。</p>
+<h1 id="Methods"><a href="#Methods" class="headerlink" title="Methods"></a>Methods</h1><p>在我分析的过程中使用的数据为实验样本的相似矩阵（ 14471 × 14471 ），且分析环境为python，可以自行构建随机矩阵模拟测试数据。</p>
+<p>加载实现降维分析所需要的python库。如果没有这些库的话，请先pip install。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> matplotlib.pyplot <span class="keyword">as</span> plt </span><br><span class="line"><span class="keyword">import</span> numpy <span class="keyword">as</span> np</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> umap</span><br><span class="line"><span class="keyword">from</span> sklearn.decomposition <span class="keyword">import</span> PCA</span><br><span class="line"><span class="keyword">from</span> sklearn <span class="keyword">import</span> manifold</span><br></pre></td></tr></table></figure>
+
+<p>生成测试数据的随机矩阵</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> <span class="title function_">generate_random_matrix</span>(<span class="params">N_sample: <span class="built_in">int</span>, M_dimension: <span class="built_in">int</span>, C_types: <span class="built_in">int</span></span>):  </span><br><span class="line">    <span class="comment"># 生成原始类型矩阵，整数类型  </span></span><br><span class="line">    original_types = np.random.randint(<span class="number">0</span>, <span class="number">2</span>, size=[C_types, M_dimension])  </span><br><span class="line">      </span><br><span class="line">    <span class="comment"># 预先分配结果矩阵  </span></span><br><span class="line">    matrix = np.zeros((N_sample, M_dimension))  </span><br><span class="line">      </span><br><span class="line">    <span class="comment"># 生成每个数据的原始类别索引  </span></span><br><span class="line">    types = np.random.randint(<span class="number">0</span>, C_types, size=N_sample)  </span><br><span class="line">      </span><br><span class="line">    <span class="comment"># 使用向量化操作填充矩阵  </span></span><br><span class="line">    <span class="keyword">for</span> i <span class="keyword">in</span> <span class="built_in">range</span>(N_sample):  </span><br><span class="line">        selected_type = original_types[types[i]]  </span><br><span class="line">        matrix[i] = selected_type + np.random.rand(M_dimension)  </span><br><span class="line">        </span><br><span class="line">    <span class="keyword">return</span> matrix, types</span><br><span class="line">    </span><br><span class="line">test_data,test_types = generate_random_matrix(<span class="number">1000</span>,<span class="number">1000</span>,<span class="number">5</span>)</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h2 id="PCA"><a href="#PCA" class="headerlink" title="PCA"></a>PCA</h2><p>以sklearn中的PCA模块进行测试学习，主要分为以下几个步骤：初始化PCA对象，PCA对象拟合测试数据，PCA对象对测试数据进行维度转化，可视化结果，后续处理（聚类等）。<br><a target="_blank" rel="noopener" href="https://scikit-learn.org/stable/modules/generated/sklearn.decomposition.PCA.html">sklearn.PCA 官方文档</a></p>
+<h3 id="生成PCA对象"><a href="#生成PCA对象" class="headerlink" title="生成PCA对象"></a>生成PCA对象</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 一般只考虑n_components参数，</span></span><br><span class="line"><span class="comment"># 当n_componets参数为整数n时，该PCA会将数据降至n维；</span></span><br><span class="line"><span class="comment"># 当其为0-1的小数f%时，该PCA会将数据降至x维，</span></span><br><span class="line"><span class="comment"># 这x维是能够解释f%的数据变异程度的最小维度。</span></span><br><span class="line"></span><br><span class="line">test_pca = PCA(n_components=<span class="number">5</span>)</span><br><span class="line"><span class="comment"># test_pca = PCA(n_components=0.99)</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="拟合测试数据与数据降维"><a href="#拟合测试数据与数据降维" class="headerlink" title="拟合测试数据与数据降维"></a>拟合测试数据与数据降维</h3><p>将数据输入至PCA对象中，提取出数据中的主要维度组成，通过调用<code>.explained_variance_ratio_</code>属性，可以看到每个主成分对数据变异程度的解释。随后我们就可以根据PCA对象中的主成分，将原始高维向量转化为低微向量</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># PCA对象拟合数据</span></span><br><span class="line">test_pca.fit(test_data)</span><br><span class="line"></span><br><span class="line"><span class="comment"># 提取原始高维数据的低维表示，或者也可以将其他同维度数据用这些主成分表示</span></span><br><span class="line">test_data_pca = test_pca.transform( test_data )</span><br><span class="line"></span><br><span class="line"><span class="comment"># 将两个过程整合在一起</span></span><br><span class="line">test_data_pca = test_pca.fit_transform( test_data )</span><br></pre></td></tr></table></figure>
+
+<p>tips: 我们可以用以下脚本可视化每个维度对数据的解释程度。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 根据图片我们可知我们的测试数据中的主要部分可以由3个主成分来表示。可以用来表示降维效果</span></span><br><span class="line">plt.plot( np.cumsum( test_pca.explained_variance_ratio_ ) )</span><br><span class="line">plt.xlabel(<span class="string">&#x27;PC&#x27;</span>)</span><br><span class="line">plt.ylabel(<span class="string">&#x27;explained_variance&#x27;</span>)</span><br><span class="line"></span><br><span class="line"><span class="comment"># PCA怎么提取主成分的可以从.components_属性中获取，其为n_compents*M维矩阵，每个M维向量表示了各个维度的加权。PCA对象中的其他方法与属性不常用，就不作展开了，感兴趣的可以自行去官网了解。</span></span><br><span class="line">test_pca.components_</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<p><img src="/./img/demension_reducer/PCA_variance.png" alt="test_pca各主成分维度对数据的变异程度解释"></p>
+<h3 id="PCA结果可视化"><a href="#PCA结果可视化" class="headerlink" title="PCA结果可视化"></a>PCA结果可视化</h3><p>我们根据提取出来的主成分对每个样本点进行可视化，根据之前的数据变异程度我们可以知道，PCA前四维应该能够将不同数据间分离。而后面的维度无法对数据进行很好的区分。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">x,y = <span class="number">0</span>,<span class="number">1</span></span><br><span class="line">plt.scatter( test_data_pca[:,x] , test_data_pca[:,y] , c=test_types )</span><br><span class="line">plt.xlabel(<span class="string">&#x27;PC%d&#x27;</span>%(x))</span><br><span class="line">plt.ylabel(<span class="string">&#x27;PC%d&#x27;</span>%(y))</span><br><span class="line">plt.colorbar()</span><br></pre></td></tr></table></figure>
+<p><img src="/./img/demension_reducer/PCA_sample_plot.png" alt="有效PCA降维结果表示"></p>
+<p>不同类别样本在PC4维度上的分布无差异，表明PC4维度基本上不包含数据样本点类别的信息。使用原始数据的维度完全无法对数据进行分类（右下），表明PCA降维操作可以帮我们提取出高维数据中的有效信息。<br><img src="/./img/demension_reducer/PCA_plot.png" alt="降维后数据的可视化表示"></p>
+<h2 id="UMAP"><a href="#UMAP" class="headerlink" title="UMAP"></a>UMAP</h2><p>UMAP采用的是一种非线性降维方法，基于黎曼流形什么的，具体可以参考<a target="_blank" rel="noopener" href="https://arxiv.org/abs/1802.03426">UMAP原文</a>。在python中使用umap的软件包叫umap-learn，具体的使用流程与PCA相近：建立UMAP对象，数据拟合，维度转化，可视化。</p>
+<p><a target="_blank" rel="noopener" href="https://umap-learn.readthedocs.io/en/latest/parameters.html">umap-learn官方文档</a>，官方文档写得比我详细得多，<strong>强烈建议</strong> 去学习一下！！！</p>
+<h3 id="生成UMAP对象"><a href="#生成UMAP对象" class="headerlink" title="生成UMAP对象"></a>生成UMAP对象</h3><p>生成umap对象时所用的参数比PCA稍多一些，且不同的参数对最后的降维结果有着比较大的影响。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">test_umap = umap.UMAP(</span><br><span class="line">        n_neighbors=n_neighbors,</span><br><span class="line">        min_dist=min_dist,</span><br><span class="line">        n_components=n_components,</span><br><span class="line">        metric=metric,</span><br><span class="line">        random_state=random_state</span><br><span class="line">    )</span><br><span class="line"></span><br><span class="line"><span class="comment"># n_neighbors, 对每个点进行降维操作时考虑的临近点的数量，使这些临近点群之间的相似度更高。这个值得根据类群大小定义才好，太小的话没有办法考虑到同一类群其他点的信息，太大的话会把不同类群点的信息合在一起。</span></span><br><span class="line"><span class="comment"># min_dist，降维后数据点的最短距离，数值越小，类群内更加密集</span></span><br><span class="line"><span class="comment"># n_components, 降维后的维度，与PCA相近，但不可以用小数。值得注意的是，如果用不同的n_components得到的同一维度的数值可能不一样。</span></span><br><span class="line"><span class="comment"># metirc, 点对之间的距离计算方法，通常为欧氏距离&quot;euclidean&quot;</span></span><br><span class="line"><span class="comment"># random_state, 随机种子，稳定计算结果</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="拟合测试数据与数据降维-1"><a href="#拟合测试数据与数据降维-1" class="headerlink" title="拟合测试数据与数据降维"></a>拟合测试数据与数据降维</h3><p>这一步骤和PCA相同，两步可以分开，也可以合并</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># UMAP对象拟合数据</span></span><br><span class="line">test_umap.fit(test_data)</span><br><span class="line"></span><br><span class="line"><span class="comment"># 提取原始高维数据的低维表示，或者也可以将其他同维度数据用这些主成分表示</span></span><br><span class="line">test_data_umap = test_umap.transform( test_data )</span><br><span class="line"></span><br><span class="line"><span class="comment"># 将两个过程整合在一起</span></span><br><span class="line">test_data_umap = test_umap.fit_transform( test_data )</span><br></pre></td></tr></table></figure>
+<p>UMAP对象中也包含了许多属性与方法，记录了UMAP计算过程中的一些中间参数与中间数据。</p>
+<h3 id="数据可视化"><a href="#数据可视化" class="headerlink" title="数据可视化"></a>数据可视化</h3><p>基本上与PCA一样</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">plt.scatter( test_data_umap[:,0] , test_data_umap[:,1] , c=test_types )</span><br><span class="line">plt.xlabel(&#x27;UMAP%d&#x27;%(0))</span><br><span class="line">plt.ylabel(&#x27;UMAP%d&#x27;%(1))</span><br><span class="line">plt.title(&quot;UMAP_plot&quot;)</span><br><span class="line">plt.colorbar()</span><br></pre></td></tr></table></figure>
+<p><img src="/./img/demension_reducer/UMAP_sample_plot.png" alt="UMAP测试绘图"></p>
+<h3 id="UMAP对象不同参数设置的影响"><a href="#UMAP对象不同参数设置的影响" class="headerlink" title="UMAP对象不同参数设置的影响"></a>UMAP对象不同参数设置的影响</h3><p>因为数据集相对比较简单，n_neighbors值大对聚类结果影响不是很大，官网教程中大n_neighbors值会出现聚类弥散。<br><img src="/./img/demension_reducer/UMAP_n_neighbor_plot.png" alt="不同n_neighbors的UMAP降维图"></p>
+<p>min_dist变大后可以使得类群点变得相对弥散<br><img src="/./img/demension_reducer/UMAP_min_dist_plot.png" alt="不同min_dist的UMAP降维图"></p>
+<p>不同n_componets下，不同UMAP降维得到的同一维度值不一样<br><img src="/./img/demension_reducer/UMAP_n_components_plot.png" alt="不同n_componets的UMAP降维图"></p>
+<p>相同random_state下，能复现出实验结果<br><img src="/./img/demension_reducer/UMAP_random_state_plot.png" alt="不同random_state的UMAP降维图"></p>
+<h2 id="t-SNE"><a href="#t-SNE" class="headerlink" title="t-SNE"></a>t-SNE</h2><p>t-SNE的使用方法差异也主要在第一步构建模型。具体了解t-SNE算法与原理可以学习<a target="_blank" rel="noopener" href="https://distill.pub/2016/misread-tsne/">t-SNE可视化学习</a>，里面还包含了t-SNE原文，感兴趣的可以了解。</p>
+<p>由于主要的过程都差不多，我这边就把所有代码都放在一起了，主要再解释一下构建t-SNE对象参数。<br><a target="_blank" rel="noopener" href="https://scikit-learn.org/stable/modules/generated/sklearn.manifold.TSNE.html">t-SNE官方文档</a></p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">test_tsne = manifold.TSNE(</span><br><span class="line">   n_components=<span class="number">2</span>,</span><br><span class="line">   init=<span class="string">&#x27;pca&#x27;</span>,</span><br><span class="line">   random_state=<span class="number">22</span> ,</span><br><span class="line">   perplexity=<span class="number">30</span> </span><br><span class="line">   )</span><br><span class="line"><span class="comment"># n_components, 降维的维度，但好像不能大于等于4，因为算法中的oct-tree结构</span></span><br><span class="line"><span class="comment"># init, 初始化的嵌入数值的方法，默认为&#x27;pca&#x27;，还可以选择&#x27;random&#x27;</span></span><br><span class="line"><span class="comment"># random_state, 与UMAP中的参数一致</span></span><br><span class="line"><span class="comment"># perplexity, 与UMAP中的n_neighbors相近，为降维过程中的考虑点数</span></span><br><span class="line"><span class="comment"># n_iter, 迭代次数</span></span><br><span class="line"><span class="comment"># max_iter, 最大迭代次数</span></span><br><span class="line"><span class="comment"># metric, 距离计算方法</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">test_data_tsne = test_tsne.fit_transform(test_data)</span><br><span class="line"></span><br><span class="line">plt.scatter( test_data_tsne[:,<span class="number">0</span>] , test_data_tsne[:,<span class="number">1</span>] , c=test_types )</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<p><img src="/./img/demension_reducer/t-SNE_plot.png" alt="t-SNE样本数据可视化"></p>
+<h2 id="个人小结"><a href="#个人小结" class="headerlink" title="个人小结"></a>个人小结</h2><p>这些降维方法在python上的实现与应用并不困难。对于大部分有数据，使用方法默认的参数就可以得到一些比较不错的降维结果，但也记得用多种方法交叉验证下降维结果是否可靠。</p>
+<p>但在部分情况下，面对一些不曾接触过的数据类型，如何根据 <strong>数据本身的特征</strong> ，选择合适的降维方法与调整降维参数是一个值得去思考的事。</p>
+<p>然后遇到降维结果与预期存在差异，可能也需要从 <strong>降维方法原理</strong> 出发，去推断到底是方法选的不对，还是数据本身存在问题</p>
+<p><strong>官方文档</strong> 真的很详细，很重要。看人博客，实验记录也就图一乐，解决不了的问题，不明白的参数，请去参阅官方文档。</p>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
     <link itemprop="mainEntityOfPage" href="http://example.com/2024/09/26/ChIP-without-control/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -751,7 +1051,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">5</span>
+          <span class="site-state-item-count">8</span>
           <span class="site-state-item-name">posts</span>
         </a>
       </div>
@@ -760,7 +1060,7 @@
         <span class="site-state-item-name">categories</span>
       </div>
       <div class="site-state-item site-state-tags">
-        <span class="site-state-item-count">10</span>
+        <span class="site-state-item-count">19</span>
         <span class="site-state-item-name">tags</span>
       </div>
   </nav>

@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="使用KEGG API获取代谢通路数据KEGG数据库中包含了大量与细胞代谢，分子层级调控相关的数据信息，是做通路分析的重要且权威的数据库网站。 在科研实践的过程中，我们关注于某一特定的代谢通路，例如光合作用。那么自然而然地，我们想要知道，有哪些基因，哪些代谢物参与到光合作用过程中。那么我们就可以在KEGG官方站点中搜索”photosynthesis”，找到对应的Pathway编号(map开头)，获取">
+<meta property="og:type" content="article">
+<meta property="og:title" content="KEGG_API">
+<meta property="og:url" content="http://example.com/2024/10/27/KEGG-API/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="使用KEGG API获取代谢通路数据KEGG数据库中包含了大量与细胞代谢，分子层级调控相关的数据信息，是做通路分析的重要且权威的数据库网站。 在科研实践的过程中，我们关注于某一特定的代谢通路，例如光合作用。那么自然而然地，我们想要知道，有哪些基因，哪些代谢物参与到光合作用过程中。那么我们就可以在KEGG官方站点中搜索”photosynthesis”，找到对应的Pathway编号(map开头)，获取">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="http://example.com/img/KEGG_API/map00195.png">
+<meta property="og:image" content="http://example.com/img/KEGG_API/map00195_ko.png">
+<meta property="og:image" content="http://example.com/img/KEGG_API/ko00195.png">
+<meta property="og:image" content="http://example.com/img/KEGG_API/K02718.png">
+<meta property="article:published_time" content="2024-10-27T14:32:31.000Z">
+<meta property="article:modified_time" content="2024-10-28T07:40:48.626Z">
+<meta property="article:author" content="John Doe">
+<meta property="article:tag" content="requests">
+<meta property="article:tag" content="BeautifulSoup">
+<meta property="article:tag" content="KEGG">
+<meta property="article:tag" content="html">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/img/KEGG_API/map00195.png">
+
+<link rel="canonical" href="http://example.com/2024/10/27/KEGG-API/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+
+  <title>KEGG_API | Hexo</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Hexo</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2024/10/27/KEGG-API/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="John Doe">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hexo">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          KEGG_API
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2024-10-27 22:32:31" itemprop="dateCreated datePublished" datetime="2024-10-27T22:32:31+08:00">2024-10-27</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2024-10-28 15:40:48" itemprop="dateModified" datetime="2024-10-28T15:40:48+08:00">2024-10-28</time>
+              </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="使用KEGG-API获取代谢通路数据"><a href="#使用KEGG-API获取代谢通路数据" class="headerlink" title="使用KEGG API获取代谢通路数据"></a>使用KEGG API获取代谢通路数据</h1><p><a target="_blank" rel="noopener" href="https://www.kegg.jp/">KEGG数据库</a>中包含了大量与细胞代谢，分子层级调控相关的数据信息，是做通路分析的重要且权威的数据库网站。</p>
+<p>在科研实践的过程中，我们关注于某一特定的代谢通路，例如光合作用。那么自然而然地，我们想要知道，有哪些基因，哪些代谢物参与到光合作用过程中。那么我们就可以在KEGG官方站点中搜索”photosynthesis”，找到对应的Pathway编号(map开头)，获取光合作用这条通路的大致信息。<br><img src="/./img/KEGG_API/map00195.png" alt="KEGG中map页面示例(map00195)"><br>更进一步，我们想要去了解这条通路中包含的各个代谢物与基因，则我们要去找到他对应的KO pathway编号(ko开头)，就可以在新的页面中获取该通路涉及的基因与代谢物等。<br><img src="/./img/KEGG_API/map00195_ko.png" alt="KEGG中map页面中寻找ko编号(map00195)">  </p>
+<p>但是通路涉及的基因与代谢物数量往往很多，很难再一个个手动操作去获取其对应信息。于是在这个时候，我们就需要通过调用<a target="_blank" rel="noopener" href="https://www.kegg.jp/kegg/rest/">KEGG的API</a>(个人数据库提供一个网络接口让用户可以更加快捷的访问数据库内的数据)去批量获取代谢通路数据了。<br><img src="/./img/KEGG_API/ko00195.png" alt="KEGG中ko页面示例(map00195)"></p>
+<p>tips: KEGG中的编号前缀均有其意义，例如 前缀C代表Compound，表明<code>CXXXX</code> 该ID对应的为一个化合物……可以参考<a target="_blank" rel="noopener" href="https://www.kegg.jp/kegg/rest/keggapi.html">官方文档</a>或其他<a target="_blank" rel="noopener" href="https://www.jianshu.com/p/d7656c2e2cbe">介绍KEGG数据库的文档</a></p>
+<h2 id="明确调用API需求"><a href="#明确调用API需求" class="headerlink" title="明确调用API需求"></a>明确调用API需求</h2><p>我主要想去获取参与到 光合作用 代谢通路上的所有基因的名称(Name)与简写(Symbol)，而每一个基因（准确来说是KEGG ORTHOLOGY,KO）在KEGG上的介绍页面路径为: <a target="_blank" rel="noopener" href="https://www.kegg.jp/entry/K0XXXX">https://www.kegg.jp/entry/K0XXXX</a> , 数据排列情况如下所示。<br><img src="/./img/KEGG_API/K02718.png" alt="KEGG中K编号页面示例(K02718)"></p>
+<p>所以，只需要：<br>①获取KO编号<br>②构建出访问KEGG数据库中该基因编号的信息路径<br>③然后使用requests工具，获取对应路径所包含的信息<br>④提取信息中的Symbol与Name<br>随后，就可以完成基因信息的提取。</p>
+<p>tips:关于html文档的解析与html元素的解析可能会在后续的文档中介绍。</p>
+<h2 id="调用API脚本"><a href="#调用API脚本" class="headerlink" title="调用API脚本"></a>调用API脚本</h2><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> requests</span><br><span class="line"><span class="keyword">from</span> bs4 <span class="keyword">import</span> BeautifulSoup </span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">get_labels_in_kegg_entry_html</span>(<span class="params">tmp_soup, key:<span class="built_in">str</span></span>):  </span><br><span class="line">    <span class="string">&quot;&quot;&quot;  </span></span><br><span class="line"><span class="string">    从KEGG数据库条目的HTML内容中提取特定键（key）对应的标签（label）值。  </span></span><br><span class="line"><span class="string">  </span></span><br><span class="line"><span class="string">    参数:  </span></span><br><span class="line"><span class="string">    tmp_soup (BeautifulSoup对象): 包含KEGG数据库条目HTML内容的BeautifulSoup对象。  </span></span><br><span class="line"><span class="string">    key (str): 要查找的标签名称的字符串。  </span></span><br><span class="line"><span class="string">  </span></span><br><span class="line"><span class="string">    返回:  </span></span><br><span class="line"><span class="string">    str: 如果找到对应的标签，则返回其文本内容（去除前后空白）。  </span></span><br><span class="line"><span class="string">    None: 如果没有找到对应的标签，则返回None并打印一条消息。  </span></span><br><span class="line"><span class="string">    &quot;&quot;&quot;</span>  </span><br><span class="line">    <span class="comment"># 在HTML内容中查找包含指定键的&lt;th&gt;标签。 由于KEGG页面中主要是这个标签，可以根据具体API所需调用高的内容更换标签  </span></span><br><span class="line">    <span class="comment"># 使用lambda函数来检查&lt;th&gt;标签的文本内容是否包含指定的键。  </span></span><br><span class="line">    tmp_th = tmp_soup.find(<span class="string">&#x27;th&#x27;</span>, string=<span class="keyword">lambda</span> a: <span class="built_in">isinstance</span>(a, <span class="built_in">str</span>) <span class="keyword">and</span> key <span class="keyword">in</span> a)  </span><br><span class="line">      </span><br><span class="line">    <span class="comment"># 如果找到了对应的&lt;th&gt;标签  </span></span><br><span class="line">    <span class="keyword">if</span> tmp_th:  </span><br><span class="line">        <span class="comment"># 找到&lt;th&gt;标签的下一个同级&lt;td&gt;标签，它通常包含标签的值。  </span></span><br><span class="line">        tmp_td = tmp_th.find_next_sibling(<span class="string">&#x27;td&#x27;</span>)  </span><br><span class="line">        <span class="comment"># 返回&lt;td&gt;标签中的文本内容，并去除前后的空白字符。  </span></span><br><span class="line">        <span class="keyword">return</span> tmp_td.get_text().strip()  </span><br><span class="line">    <span class="keyword">else</span>:  </span><br><span class="line">        <span class="comment"># 如果没有找到对应的&lt;th&gt;标签，打印一条消息说明未找到。  </span></span><br><span class="line">        <span class="built_in">print</span>(<span class="string">f&#x27;Not Found <span class="subst">&#123;key&#125;</span> in the query soup&#x27;</span>)  </span><br><span class="line">        <span class="comment"># 返回None表示未找到对应的标签值。  </span></span><br><span class="line">        <span class="keyword">return</span> <span class="literal">None</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># API前缀</span></span><br><span class="line">prefix_url=<span class="string">&quot;https://www.kegg.jp/entry/&quot;</span></span><br><span class="line">querys = [ <span class="string">&quot;K00001&quot;</span> , ... ]     <span class="comment"># 需要查询的基因的K编号</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">for</span> tmp_k_ID <span class="keyword">in</span> querys:</span><br><span class="line">    <span class="comment"># 预处理K编号，避免空格等字符输入</span></span><br><span class="line">    tmp_k_ID = tmp_k_ID.strip()</span><br><span class="line"></span><br><span class="line">    <span class="comment"># 调用requests.get方法获取对应K编号基因的KEGG API内容</span></span><br><span class="line">    tmp_response = requests.get( prefix_url+tmp_k_ID )</span><br><span class="line"></span><br><span class="line">    <span class="comment"># 将网页文本内容解析为soup对象</span></span><br><span class="line">    tmp_sp = BeautifulSoup( tmp_response.text , <span class="string">&quot;html.parser&quot;</span> )</span><br><span class="line"></span><br><span class="line">    <span class="comment"># 获取Symbol标签和Name标签后的数据信息</span></span><br><span class="line">    tmp_sym, tmp_name = get_labels_in_kegg_entry_html( tmp_sp , <span class="string">&#x27;Symbol&#x27;</span>) , get_labels_in_kegg_entry_html( tmp_sp , <span class="string">&#x27;Name&#x27;</span>)</span><br><span class="line"></span><br><span class="line">    <span class="comment"># 输出该K编号的基因信息结果</span></span><br><span class="line">    <span class="built_in">print</span>( tmp_k_ID+<span class="string">&#x27;*&#x27;</span>+ tmp_sym +<span class="string">&#x27;*&#x27;</span>+ tmp_name)</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>具体BeatifulSoup的使用方法可以参考其<a target="_blank" rel="noopener" href="https://beautifulsoup.cn/">官方文档</a>，后续我个人应当也会更新相应的用法与我自身对这个包的理解。</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/requests/" rel="tag"># requests</a>
+              <a href="/tags/BeautifulSoup/" rel="tag"># BeautifulSoup</a>
+              <a href="/tags/KEGG/" rel="tag"># KEGG</a>
+              <a href="/tags/html/" rel="tag"># html</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2024/10/22/fastp-Usage/" rel="prev" title="fastp Usage">
+      <i class="fa fa-chevron-left"></i> fastp Usage
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8KEGG-API%E8%8E%B7%E5%8F%96%E4%BB%A3%E8%B0%A2%E9%80%9A%E8%B7%AF%E6%95%B0%E6%8D%AE"><span class="nav-number">1.</span> <span class="nav-text">使用KEGG API获取代谢通路数据</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%98%8E%E7%A1%AE%E8%B0%83%E7%94%A8API%E9%9C%80%E6%B1%82"><span class="nav-number">1.1.</span> <span class="nav-text">明确调用API需求</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%B0%83%E7%94%A8API%E8%84%9A%E6%9C%AC"><span class="nav-number">1.2.</span> <span class="nav-text">调用API脚本</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">John Doe</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">8</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+        <span class="site-state-item-count">3</span>
+        <span class="site-state-item-name">categories</span>
+      </div>
+      <div class="site-state-item site-state-tags">
+        <span class="site-state-item-count">19</span>
+        <span class="site-state-item-name">tags</span>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">John Doe</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>
